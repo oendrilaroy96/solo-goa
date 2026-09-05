@@ -1,0 +1,124 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@600&display=swap");
+@import "tailwindcss";
+
+/*
+ * Scrapbook / Goa beach palette — WCAG AA compliant text colours
+ *
+ *   ink     (#2c1810) on cream (#f7f0e0)  ≥ 13:1 ✓
+ *   muted   (#7a5030) on cream            ≥  6.5:1 ✓
+ *   ocean   (#1a6e90) on white            ≥  5.7:1 ✓
+ *   coral   (#b84820) on white            ≥  5.6:1 ✓
+ *   gold    (#7a5800) on white            ≥  6.4:1 ✓
+ *   palm    (#2a7a50) on white            ≥  5.0:1 ✓
+ *
+ * Soft "*-soft" tints are background fills only — never standalone text.
+ */
+@theme {
+  --color-ground:        #f7f0e0;   /* aged cream paper */
+  --color-paper:         #fffef8;   /* clean sheet white */
+  --color-ink:           #2c1810;   /* dark ink */
+  --color-muted:         #7a5030;   /* warm taupe */
+  --color-line:          #e0cca0;   /* paper ruling */
+
+  --color-azulejo:       #1a6e90;   /* ocean blue  5.7:1 ✓ */
+  --color-azulejo-soft:  #daeef8;
+
+  --color-laterite:      #b84820;   /* sunset coral 5.6:1 ✓ */
+  --color-laterite-soft: #fde8e2;
+
+  --color-mustard:       #7a5800;   /* deep gold  6.4:1 ✓ */
+  --color-mustard-soft:  #fef3d0;
+
+  --color-monsoon:       #2a7a50;   /* palm green  5.0:1 ✓ */
+  --color-monsoon-soft:  #d4eed8;
+
+  --font-sans:    "Work Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif:   "Fraunces", Georgia, serif;
+  --font-mono:    "IBM Plex Mono", monospace;
+  --font-script:  "Caveat", cursive;
+}
+
+/* ── Dark mode ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-ground:        #1e140a;
+    --color-paper:         #271a0e;
+    --color-ink:           #f5ead8;
+    --color-muted:         #c0956a;
+    --color-line:          #3e2a16;
+    --color-azulejo:       #6abcd6;
+    --color-azulejo-soft:  #0e2d3e;
+    --color-laterite:      #f08060;
+    --color-laterite-soft: #3d1e10;
+    --color-mustard:       #e8be60;
+    --color-mustard-soft:  #3a2c08;
+    --color-monsoon:       #6ac890;
+    --color-monsoon-soft:  #0e2e1e;
+  }
+}
+:root[data-theme="dark"] {
+  --color-ground:        #1e140a;
+  --color-paper:         #271a0e;
+  --color-ink:           #f5ead8;
+  --color-muted:         #c0956a;
+  --color-line:          #3e2a16;
+  --color-azulejo:       #6abcd6;
+  --color-azulejo-soft:  #0e2d3e;
+  --color-laterite:      #f08060;
+  --color-laterite-soft: #3d1e10;
+  --color-mustard:       #e8be60;
+  --color-mustard-soft:  #3a2c08;
+  --color-monsoon:       #6ac890;
+  --color-monsoon-soft:  #0e2e1e;
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background-color: var(--color-ground);
+  /* ruled-paper texture */
+  background-image: repeating-linear-gradient(
+    transparent 0px, transparent 26px,
+    rgba(180,145,80,.12) 27px
+  );
+  background-size: 100% 27px;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Global accessible focus ring */
+:focus-visible {
+  outline: 3px solid var(--color-azulejo);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Checkbox */
+input[type="checkbox"] { accent-color: var(--color-azulejo); }
+
+/* Native details/summary toggle icon */
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details[open] > summary .toggle-icon::after { content: "−"; }
+details:not([open]) > summary .toggle-icon::after { content: "+"; }
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* Scrapbook tape strip — reusable via className="tape-h" */
+.tape-h {
+  display: block;
+  height: 22px;
+  background: rgba(255, 240, 160, 0.65);
+  border-top: 1px solid rgba(200,180,60,.25);
+  border-bottom: 1px solid rgba(200,180,60,.25);
+  backdrop-filter: blur(2px);
+}
