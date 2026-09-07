@@ -14,27 +14,33 @@ export default function EventItem({ event, hideIfSettled }: Props) {
 
   return (
     /* Mobile: stacked · sm: 3-col grid */
-    <article className="relative pb-4 sm:pb-5
-      before:content-[''] before:absolute before:-left-[17px] before:top-[5px] before:w-[7px] before:h-[7px] before:rounded-full before:bg-azulejo before:shadow-[0_0_0_3px_var(--color-azulejo-soft)]
-      sm:before:-left-[21px] sm:before:top-[6px] sm:before:w-2 sm:before:h-2 sm:before:shadow-[0_0_0_4px_var(--color-azulejo-soft)]"
+    <article
+      className="relative mb-5
+        before:content-[''] before:absolute before:-left-[19px] before:top-[5px]
+        before:w-[6px] before:h-[6px] before:rounded-full
+        before:border-2 before:border-[rgba(201,168,76,.5)] before:bg-transparent"
     >
-      {/* Time chip */}
-      <div className="inline-flex items-center mb-1 font-mono text-[10.5px] font-semibold px-2 py-0.5 rounded-full bg-azulejo-soft text-azulejo w-fit sm:hidden">
+      {/* Time chip — mobile */}
+      <div
+        className="inline-flex items-center mb-1 font-mono text-[10px] font-semibold w-fit sm:hidden"
+        style={{ color: '#c9a84c' }}
+      >
         {event.time}
       </div>
 
       {/* Desktop: 3-col layout */}
-      <div className="hidden sm:grid sm:grid-cols-[96px_1fr_auto] sm:gap-3.5 sm:items-start">
-        <div className="font-mono text-[12px] font-medium text-azulejo tabular-nums pt-0.5">{event.time}</div>
+      <div className="hidden sm:grid sm:grid-cols-[100px_1fr_auto] sm:gap-4 sm:items-baseline">
+        <div className="font-mono text-[11.5px] font-medium tabular-nums" style={{ color: '#c9a84c' }}>{event.time}</div>
         <div>
-          <h3 className="mt-0 mb-0.5 text-[15px] font-semibold text-ink">{event.title}</h3>
+          <h3 className="mt-0 mb-0 text-[14px] font-semibold leading-snug" style={{ color: '#f5f0e8' }}>{event.title}</h3>
           {hasHtml ? (
             <div
-              className="text-muted text-[13px] [&_p]:m-0 [&_a]:font-mono [&_a]:text-[10.5px] [&_a]:text-azulejo [&_a]:no-underline [&_a]:border-b [&_a]:border-dotted [&_a]:border-azulejo [&_a]:mr-2.5 [&_a:hover]:border-solid [&_strong]:font-semibold [&_strong]:text-ink"
+              className="text-[13px] mt-0.5 [&_p]:m-0 [&_a]:font-mono [&_a]:text-[10.5px] [&_a]:no-underline [&_a]:border-b [&_a]:border-dotted [&_a]:mr-2.5 [&_a:hover]:border-solid [&_strong]:font-semibold"
+              style={{ color: '#8a8070' }}
               dangerouslySetInnerHTML={{ __html: event.description }}
             />
           ) : (
-            <p className="text-muted text-[13px] m-0">{event.description}</p>
+            <p className="text-[13px] m-0 mt-0.5 leading-snug" style={{ color: '#8a8070' }}>{event.description}</p>
           )}
         </div>
         <Tag label={event.tag} variant={event.tagVariant} />
@@ -42,14 +48,15 @@ export default function EventItem({ event, hideIfSettled }: Props) {
 
       {/* Mobile: stacked layout */}
       <div className="sm:hidden">
-        <h3 className="mt-0 mb-0.5 text-[14.5px] font-semibold text-ink leading-snug">{event.title}</h3>
+        <h3 className="mt-0 mb-0 text-[13.5px] font-semibold leading-snug" style={{ color: '#f5f0e8' }}>{event.title}</h3>
         {hasHtml ? (
           <div
-            className="text-muted text-[12.5px] [&_p]:m-0 [&_a]:font-mono [&_a]:text-[10.5px] [&_a]:text-azulejo [&_a]:no-underline [&_a]:border-b [&_a]:border-dotted [&_a]:border-azulejo [&_a]:mr-2 [&_strong]:font-semibold [&_strong]:text-ink"
+            className="text-[12px] mt-0.5 [&_p]:m-0 [&_a]:font-mono [&_a]:text-[10px] [&_a]:no-underline [&_a]:border-b [&_a]:border-dotted [&_a]:mr-2 [&_strong]:font-semibold"
+            style={{ color: '#8a8070' }}
             dangerouslySetInnerHTML={{ __html: event.description }}
           />
         ) : (
-          <p className="text-muted text-[12.5px] m-0">{event.description}</p>
+          <p className="text-[12px] m-0 mt-0.5 leading-snug" style={{ color: '#8a8070' }}>{event.description}</p>
         )}
         <div className="mt-1.5">
           <Tag label={event.tag} variant={event.tagVariant} />

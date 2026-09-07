@@ -1,76 +1,31 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
-/*
- * Scrapbook / Goa beach palette — WCAG AA compliant text colours
- *
- *   ink     (#2c1810) on cream (#f7f0e0)  ≥ 13:1 ✓
- *   muted   (#7a5030) on cream            ≥  6.5:1 ✓
- *   ocean   (#1a6e90) on white            ≥  5.7:1 ✓
- *   coral   (#b84820) on white            ≥  5.6:1 ✓
- *   gold    (#7a5800) on white            ≥  6.4:1 ✓
- *   palm    (#2a7a50) on white            ≥  5.0:1 ✓
- *
- * Soft "*-soft" tints are background fills only — never standalone text.
- */
 @theme {
-  --color-ground:        #f7f0e0;   /* aged cream paper */
-  --color-paper:         #fffef8;   /* clean sheet white */
-  --color-ink:           #2c1810;   /* dark ink */
-  --color-muted:         #7a5030;   /* warm taupe */
-  --color-line:          #e0cca0;   /* paper ruling */
+  --color-ground:        #0d0d0d;
+  --color-paper:         #141414;
+  --color-ink:           #f5f0e8;
+  --color-muted:         #8a8070;
+  --color-line:          rgba(255,255,255,.07);
 
-  --color-azulejo:       #1a6e90;   /* ocean blue  5.7:1 ✓ */
-  --color-azulejo-soft:  #daeef8;
+  --color-azulejo:       #c9a84c;   /* gold */
+  --color-azulejo-soft:  rgba(201,168,76,.10);
 
-  --color-laterite:      #b84820;   /* sunset coral 5.6:1 ✓ */
-  --color-laterite-soft: #fde8e2;
+  --color-laterite:      #e8c96a;   /* gold light */
+  --color-laterite-soft: rgba(232,201,106,.08);
 
-  --color-mustard:       #7a5800;   /* deep gold  6.4:1 ✓ */
-  --color-mustard-soft:  #fef3d0;
+  --color-mustard:       #a07840;   /* warm bronze */
+  --color-mustard-soft:  rgba(160,120,64,.10);
 
-  --color-monsoon:       #2a7a50;   /* palm green  5.0:1 ✓ */
-  --color-monsoon-soft:  #d4eed8;
+  --color-monsoon:       #6a8a6a;   /* muted sage */
+  --color-monsoon-soft:  rgba(106,138,106,.10);
 
   --font-sans:    "Work Sans", ui-sans-serif, system-ui, sans-serif;
   --font-serif:   "Fraunces", Georgia, serif;
   --font-mono:    "IBM Plex Mono", monospace;
-  --font-script:  "Caveat", cursive;
+  --font-script:  "Fraunces", Georgia, serif;
 }
 
-/* ── Dark mode ── */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-ground:        #1e140a;
-    --color-paper:         #271a0e;
-    --color-ink:           #f5ead8;
-    --color-muted:         #c0956a;
-    --color-line:          #3e2a16;
-    --color-azulejo:       #6abcd6;
-    --color-azulejo-soft:  #0e2d3e;
-    --color-laterite:      #f08060;
-    --color-laterite-soft: #3d1e10;
-    --color-mustard:       #e8be60;
-    --color-mustard-soft:  #3a2c08;
-    --color-monsoon:       #6ac890;
-    --color-monsoon-soft:  #0e2e1e;
-  }
-}
-:root[data-theme="dark"] {
-  --color-ground:        #1e140a;
-  --color-paper:         #271a0e;
-  --color-ink:           #f5ead8;
-  --color-muted:         #c0956a;
-  --color-line:          #3e2a16;
-  --color-azulejo:       #6abcd6;
-  --color-azulejo-soft:  #0e2d3e;
-  --color-laterite:      #f08060;
-  --color-laterite-soft: #3d1e10;
-  --color-mustard:       #e8be60;
-  --color-mustard-soft:  #3a2c08;
-  --color-monsoon:       #6ac890;
-  --color-monsoon-soft:  #0e2e1e;
-}
 
 /* ── Base ── */
 *, *::before, *::after { box-sizing: border-box; }
@@ -79,28 +34,40 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  background-color: var(--color-ground);
-  /* ruled-paper texture */
-  background-image: repeating-linear-gradient(
-    transparent 0px, transparent 26px,
-    rgba(180,145,80,.12) 27px
-  );
-  background-size: 100% 27px;
-  color: var(--color-ink);
+  background: #0d0d0d;
+  color: #f5f0e8;
   font-family: var(--font-sans);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
+/* Gold divider line utility */
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,.4), transparent);
+}
+
+/* Subtle card glow on hover */
+.luxury-card {
+  background: #141414;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 2px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.luxury-card:hover {
+  border-color: rgba(201,168,76,.2);
+  box-shadow: 0 0 40px rgba(201,168,76,.04);
+}
+
 /* Global accessible focus ring */
 :focus-visible {
-  outline: 3px solid var(--color-azulejo);
+  outline: 2px solid rgba(201,168,76,.6);
   outline-offset: 3px;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 /* Checkbox */
-input[type="checkbox"] { accent-color: var(--color-azulejo); }
+input[type="checkbox"] { accent-color: #c9a84c; }
 
 /* Native details/summary toggle icon */
 details > summary { list-style: none; }
@@ -111,14 +78,4 @@ details:not([open]) > summary .toggle-icon::after { content: "+"; }
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
-}
-
-/* Scrapbook tape strip — reusable via className="tape-h" */
-.tape-h {
-  display: block;
-  height: 22px;
-  background: rgba(255, 240, 160, 0.65);
-  border-top: 1px solid rgba(200,180,60,.25);
-  border-bottom: 1px solid rgba(200,180,60,.25);
-  backdrop-filter: blur(2px);
 }

@@ -19,7 +19,7 @@ export const budgetGroups: BudgetGroup[] = [
     subtitle: 'Train & flights',
     items: [
       { id: 'train-out', label: 'Balurghat → Kolkata train', sublabel: '12 September, 7:00 PM · Balurghat → Sealdah, arriving 4:35 AM on 13 Sep · booked, confirmed cost', defaultValue: 1079.05 },
-      { id: 'flight-to-goa', label: 'Kolkata → Goa flight', sublabel: 'IndiGo 6E 634 · confirmed cost', defaultValue: 9000 },
+      { id: 'flight-to-goa', label: 'Kolkata → Goa flight', sublabel: 'IndiGo 6E 634 · booked & paid', defaultValue: 8759 },
       { id: 'flight-return', label: 'Goa → Kolkata return flight', sublabel: '18 September, 1:05 PM, departing GOI (Dabolim) · confirmed cost', defaultValue: 11000 },
       { id: 'train-return', label: 'Kolkata → Balurghat return leg', sublabel: 'Exact date/train not yet booked · outbound was ₹1,079.05 so use as reference', defaultValue: 1079.05 },
     ],
@@ -30,8 +30,8 @@ export const budgetGroups: BudgetGroup[] = [
     subtitle: 'Airport runs, day-trip cabs',
     items: [
       { id: 'kolkata-cab', label: 'Kolkata airport transfer', sublabel: '14 September · local transfer to the airport · confirmed cost', defaultValue: 300 },
-      { id: 'goa-airport-cab', label: 'Goa airport → hotel transfer', sublabel: '14 September · worth reconfirming since Taj is farther from the airport', defaultValue: 1452 },
-      { id: 'savaari', label: 'Savaari 8-hour cab', sublabel: '15 September · confirmed price, but route now starts from Taj Holiday Village in Candolim — may need reconfirming', defaultValue: 2750 },
+      { id: 'goa-airport-cab', label: 'Goa airport → Taj Holiday Village transfer', sublabel: '14 September · Savaari booked, GOI (Dabolim) → Taj Holiday Village · not yet paid · confirmed cost', defaultValue: 1487 },
+      { id: 'savaari', label: 'Savaari 8-hour cab', sublabel: '15 September · pickup 12:00 PM from Taj Holiday Village, 8 hrs · booked & paid', defaultValue: 2750 },
       { id: 'velha-goa-cab', label: 'Transport to Velha Goa', sublabel: '16 September · round trip, Panjim ↔ Old Goa · mode and cost not yet decided', defaultValue: 0 },
       { id: 'goi-transfer', label: 'Goa airport (GOI) transfer', sublabel: '18 September · was priced for Mopa/GOX route — GOI (Dabolim) is closer to Panjim, so this ₹2,000 figure likely needs a fresh quote', defaultValue: 2000 },
     ],
@@ -41,9 +41,9 @@ export const budgetGroups: BudgetGroup[] = [
     name: 'Stays',
     subtitle: '2 bookings, 14–18 Sep',
     items: [
-      { id: 'taaj-kutir', label: 'TaajKutir Boutique Hotel & Spa, Kolkata', sublabel: '13–14 September · 1 night · confirmed cost', defaultValue: 0 },
+      { id: 'taaj-kutir', label: 'TaajKutir Boutique Hotel & Spa, Kolkata', sublabel: '13–14 September · 1 night · confirmed cost', defaultValue: 7182 },
       { id: 'taj', label: 'Taj Holiday Village Resort & Spa', sublabel: '14–15 September · 1 night · confirmed cost, paid', defaultValue: 11947.50 },
-      { id: 'relax-inn', label: 'Relax Inn Guesthouse', sublabel: '15–18 September · 3 nights · confirmed cost', defaultValue: 6600 },
+      { id: 'relax-inn', label: 'Relax Inn Guesthouse', sublabel: '15–18 September · 3 nights · booked & paid', defaultValue: 6600 },
     ],
   },
   {
@@ -51,7 +51,7 @@ export const budgetGroups: BudgetGroup[] = [
     name: 'Pottery workshop',
     subtitle: 'Claykind, 3 days',
     items: [
-      { id: 'claykind', label: 'Claykind pottery workshop', sublabel: '15–17 September (assumed) · 3-day hand-building workshop, 4–6 PM · confirmed cost', defaultValue: 6000 },
+      { id: 'claykind', label: 'Claykind pottery workshop', sublabel: '15–17 September · 3-day hand-building workshop, 4–6 PM · booked & paid', defaultValue: 6000 },
     ],
   },
   {
@@ -93,4 +93,4 @@ export const budgetGroups: BudgetGroup[] = [
   },
 ];
 
-export const STORAGE_KEY = 'goaBudget';
+export const STORAGE_KEY = 'goaBudget_v2';

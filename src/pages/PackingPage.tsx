@@ -1,25 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { packingSections } from '../data/checklists';
+import { supabase } from '../lib/supabase';
 
-const STORAGE_KEY = 'goaPacking';
-const allItems = packingSections.flatMap(s => s.items);
+const LOCAL_KEY  = 'goaPacking';
+const SUPA_KEY   = 'packing';
+const allItems   = packingSections.flatMap(s => s.items);
 
-function loadSaved(): boolean[] {
+function loadLocal(): boolean[] {
   try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    const raw = JSON.parse(localStorage.getItem(LOCAL_KEY) || 'null');
     if (Array.isArray(raw) && raw.length === allItems.length) return raw;
   } catch { /* */ }
   return allItems.map(() => false);
 }
 
 export default function PackingPage() {
-  const [checked, setChecked] = useState<boolean[]>(loadSaved);
+  const [checked, setChecked] = useState<boolean[]>(loadLocal);
+  const skipSave = useRef(true);
 
   const done  = checked.filter(Boolean).length;
   const total = allItems.length;
 
+  // Load from Supabase on mount
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(checked)); } catch { /* */ }
+    supabase.from('kv').select('value').eq('key', SUPA_KEY).maybeSingle().then(({ data }) => {
+      if (data?.value && Array.isArray(data.value) && data.value.length === allItems.length) {
+        const remote = data.value as boolean[];
+        setChecked(remote);
+        try { localStorage.setItem(LOCAL_KEY, JSON.stringify(remote)); } catch { /* */ }
+      }
+      skipSave.current = false;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (skipSave.current) return;
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(checked)); } catch { /* */ }
+    supabase.from('kv').upsert({ key: SUPA_KEY, value: checked }).then(() => { /* fire-and-forget */ });
   }, [checked]);
 
   function toggle(globalIdx: number) {
@@ -33,85 +50,99 @@ export default function PackingPage() {
   let globalIdx = 0;
 
   return (
-    <section
-      className="border-2 border-line rounded-[16px] overflow-hidden shadow-[3px_5px_0_rgba(100,70,20,.10),6px_10px_20px_rgba(60,30,10,.09)] sm:rounded-[22px]"
-      style={{ background: 'linear-gradient(160deg, #fffef8 0%, #fdf8f0 100%)' }}
-    >
-      {/* Washi tape strip */}
-      <div
-        className="h-5 w-full"
-        aria-hidden="true"
-        style={{ background: 'rgba(255,240,160,.55)', borderBottom: '1px solid rgba(200,180,60,.2)' }}
-      />
-
-      <div className="p-4 sm:p-6">
-        <div className="flex items-baseline justify-between gap-2.5 mb-0.5">
-          <h2 className="m-0 font-serif font-semibold italic text-xl text-ink sm:text-[22px]">Packing checklist</h2>
-          <span className="font-mono text-[11px] text-muted whitespace-nowrap sm:text-[12.5px]" aria-live="polite">
-            {done} / {total}
-          </span>
-        </div>
-        <p className="text-muted mt-0.5 mb-3 text-[12px] leading-relaxed sm:text-[13px]">
-          Built around this trip — the pottery workshop, the churches, the solo travel. Ticks are saved on this device.
-        </p>
-
-        {/* Progress bar */}
-        <div className="h-[6px] rounded-full bg-ground overflow-hidden mb-4 border border-line">
-          <div
-            className="h-full bg-monsoon rounded-full transition-[width_.25s_ease]"
-            style={{ width: total ? `${(done / total) * 100}%` : '0%' }}
-            role="progressbar"
-            aria-valuenow={done}
-            aria-valuemin={0}
-            aria-valuemax={total}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          {packingSections.map(section => {
-            const sectionStart = globalIdx;
-            const sectionItems = section.items;
-            globalIdx += sectionItems.length;
-
-            return (
-              <div key={section.title} className="mb-1">
-                {section.title && (
-                  <h3
-                    className="text-[17px] text-muted mt-5 mb-2 first:mt-0"
-                    style={{ fontFamily: 'var(--font-script)' }}
-                  >
-                    {section.title}
-                  </h3>
-                )}
-                {sectionItems.map((item, i) => {
-                  const idx = sectionStart + i;
-                  const isDone = checked[idx];
-                  return (
-                    <label
-                      key={item.id}
-                      className={`flex gap-2.5 items-start px-3 py-2.5 rounded-[10px] text-[13px] cursor-pointer mb-1 transition-opacity border border-transparent hover:border-line hover:bg-paper ${isDone ? 'opacity-50' : ''}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isDone}
-                        onChange={() => toggle(idx)}
-                        className="mt-0.5 w-[18px] h-[18px] sm:w-auto sm:h-auto"
-                      />
-                      <span className={isDone ? 'line-through' : ''}>{item.label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
-
-        <div
-          className="mt-5 p-3.5 rounded-[4px_12px_12px_4px] text-[12px] text-ink sm:text-[12.5px]"
-          style={{ borderLeft: '3px solid var(--color-mustard)', background: 'var(--color-mustard-soft)' }}
+    <section>
+      <div className="gold-line mb-8" />
+      <div className="flex items-baseline justify-between gap-2.5 mb-1">
+        <h2
+          className="m-0 text-[22px]"
+          style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: '#f5f0e8' }}
         >
-          <strong>Weather note:</strong> Forecast shows rain most days — pack to keep electronics and documents dry rather than relying on the sun.
-        </div>
+          Packing checklist
+        </h2>
+        <span
+          className="font-mono text-[11px] whitespace-nowrap"
+          style={{ color: '#8a8070' }}
+          aria-live="polite"
+        >
+          {done} / {total}
+        </span>
+      </div>
+      <p className="mt-1 mb-6 text-[13px] leading-relaxed" style={{ color: '#8a8070' }}>
+        Built around this trip — the pottery workshop, the churches, the solo travel. Ticks sync across your devices.
+      </p>
+
+      {/* Progress bar */}
+      <div
+        className="mb-8 overflow-hidden"
+        style={{ height: 1, background: 'rgba(255,255,255,.08)' }}
+      >
+        <div
+          style={{
+            height: '100%',
+            background: '#c9a84c',
+            width: total ? `${(done / total) * 100}%` : '0%',
+            transition: 'width .25s ease',
+          }}
+          role="progressbar"
+          aria-valuenow={done}
+          aria-valuemin={0}
+          aria-valuemax={total}
+        />
+      </div>
+
+      <div>
+        {packingSections.map(section => {
+          const sectionStart = globalIdx;
+          const sectionItems = section.items;
+          globalIdx += sectionItems.length;
+
+          return (
+            <div key={section.title} className="mb-2">
+              {section.title && (
+                <h3
+                  className="font-mono font-semibold uppercase tracking-[.1em] text-[10px] mt-8 mb-3 first:mt-0"
+                  style={{ color: '#c9a84c' }}
+                >
+                  {section.title}
+                </h3>
+              )}
+              {sectionItems.map((item, i) => {
+                const idx = sectionStart + i;
+                const isDone = checked[idx];
+                return (
+                  <label
+                    key={item.id}
+                    className="flex gap-3 items-start px-0 py-2.5 text-[13px] cursor-pointer transition-opacity"
+                    style={{
+                      borderBottom: '1px solid rgba(255,255,255,.05)',
+                      opacity: isDone ? 0.4 : 1,
+                      color: '#f5f0e8',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isDone}
+                      onChange={() => toggle(idx)}
+                      className="mt-0.5 w-[16px] h-[16px] flex-none"
+                    />
+                    <span className={isDone ? 'line-through' : ''}>{item.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      <div
+        className="mt-8 p-4 text-[12.5px]"
+        style={{
+          borderLeft: '2px solid rgba(201,168,76,.3)',
+          background: 'rgba(201,168,76,.04)',
+          color: '#f5f0e8',
+        }}
+      >
+        <strong style={{ color: '#c9a84c' }}>Weather note:</strong> Forecast shows rain most days — pack to keep electronics and documents dry rather than relying on the sun.
       </div>
     </section>
   );

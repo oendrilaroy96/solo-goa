@@ -77,9 +77,9 @@ export const days: DayData[] = [
       {
         time: 'Afternoon',
         title: 'Check in to TaajKutir Boutique Hotel & Spa',
-        description: `<p class="linkrow"><a href="https://www.google.com/maps/search/?api=1&query=TaajKutir+Boutique+Hotel+Spa+Kolkata" target="_blank" rel="noopener">Map</a></p><p>TaajKutir Boutique Hotel & Spa, Kolkata. One night before the early morning Goa flight on 14 September. Exact address, room type and cost not yet added to the tracker — update once you have the booking confirmation.</p>`,
-        tag: 'Cost TBD',
-        tagVariant: 'pending',
+        description: `<p class="linkrow"><a href="https://www.google.com/maps/search/?api=1&query=TaajKutir+Boutique+Hotel+Spa+Kolkata" target="_blank" rel="noopener">Map</a></p><p>TaajKutir Boutique Hotel & Spa, Kolkata. One night before the early morning Goa flight on 14 September. Confirmed cost ₹7,182.</p>`,
+        tag: '₹7,182',
+        tagVariant: 'default',
       },
       {
         time: 'Evening',
@@ -107,7 +107,14 @@ export const days: DayData[] = [
         time: '11:50–2:35',
         title: 'Fly from Kolkata to Goa',
         description: `<p class="linkrow"><a href="https://www.google.com/maps/search/?api=1&query=Netaji+Subhas+Chandra+Bose+International+Airport+Kolkata" target="_blank" rel="noopener">Kolkata Airport Map</a><a href="https://www.google.com/maps/search/?api=1&query=Goa+Dabolim+Airport" target="_blank" rel="noopener">Goa Airport Map</a></p><p>IndiGo 6E 634 from CCU to Goa Dabolim Airport. Allow around 40–55 minutes after landing for baggage collection and meeting the airport cab.</p>`,
-        tag: '₹9,000',
+        tag: '₹8,759',
+        tagVariant: 'default',
+      },
+      {
+        time: '~3:30 PM',
+        title: 'Savaari cab: Dabolim Airport → Taj Holiday Village',
+        description: 'Savaari booked, not yet paid. GOI (Dabolim) to Taj Holiday Village Resort & Spa, Sinquerim, Candolim. Confirmed cost ₹1,487.',
+        tag: '₹1,487',
         tagVariant: 'default',
       },
       {
@@ -156,15 +163,22 @@ export const days: DayData[] = [
       {
         time: 'Morning',
         title: 'Breakfast at Taj Holiday Village Resort & Spa',
-        description: 'Whether breakfast is included in the ₹11,947.50 rate hasn\'t been confirmed. Exact time not set.',
-        tag: 'Confirm if included',
-        tagVariant: 'pending',
+        description: 'Breakfast included in the ₹11,947.50 rate. Exact time not set — hotel will confirm.',
+        tag: 'Included',
+        tagVariant: 'free',
       },
       {
         time: '12:00 PM',
         title: 'Check out of Taj Holiday Village Resort & Spa',
         description: 'Sinquerim, Candolim, Goa 403515. Checkout at 12:00 PM, as you confirmed. Luggage travels with you until check-in at Relax Inn Guesthouse this evening.',
         tag: 'Checkout confirmed',
+        tagVariant: 'default',
+      },
+      {
+        time: '12:00 PM',
+        title: 'Savaari cab pickup — 8 hours',
+        description: 'Savaari cab picks up from Taj Holiday Village at 12:00 PM. With you for 8 hours. Booked & paid, ₹2,750.',
+        tag: '₹2,750',
         tagVariant: 'default',
       },
       {

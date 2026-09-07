@@ -13,30 +13,20 @@ interface Props {
 }
 
 export default function StayCard({ status, name, details, links, isAlternative, children }: Props) {
-  const accentColor = isAlternative ? 'var(--color-mustard)' : 'var(--color-monsoon)';
-  const accentSoft  = isAlternative ? 'var(--color-mustard-soft)' : 'var(--color-monsoon-soft)';
-  const statusColor = isAlternative ? 'var(--color-mustard)' : 'var(--color-monsoon)';
+  const accentBorder = isAlternative
+    ? '3px solid rgba(255,255,255,.1)'
+    : '3px solid rgba(201,168,76,.4)';
 
   return (
     <div
-      className="relative mt-3 first:mt-0 rounded-[12px] border-2 border-line overflow-hidden"
-      style={{
-        background: 'var(--color-paper)',
-        boxShadow: '2px 3px 0 rgba(100,60,20,.08), 3px 6px 14px rgba(60,30,10,.07)',
-      }}
+      className="luxury-card relative mt-3 first:mt-0"
+      style={{ borderLeft: accentBorder }}
     >
-      {/* Left accent stripe */}
-      <div
-        className="absolute inset-y-0 left-0 w-1"
-        style={{ background: accentColor }}
-        aria-hidden="true"
-      />
-
-      <div className="pl-4 pr-3.5 py-3 sm:pl-5 sm:pr-4 sm:py-3.5">
-        <div className="flex flex-wrap items-start justify-between gap-1.5">
+      <div className="pl-4 pr-4 py-3.5 sm:pl-5 sm:pr-5 sm:py-4">
+        <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
           <small
-            className="font-mono font-bold uppercase tracking-[.07em] text-[9.5px] px-2 py-0.5 rounded-full border sm:text-[10px]"
-            style={{ background: accentSoft, color: statusColor, borderColor: accentColor, opacity: 0.85 }}
+            className="font-mono font-bold uppercase tracking-[.08em]"
+            style={{ fontSize: 9.5, color: isAlternative ? '#8a8070' : '#c9a84c', letterSpacing: '0.1em' }}
           >
             {status}
           </small>
@@ -48,7 +38,11 @@ export default function StayCard({ status, name, details, links, isAlternative, 
                   href={l.url}
                   target="_blank"
                   rel="noopener"
-                  className="font-mono text-[10.5px] text-azulejo border-b border-dotted border-azulejo no-underline hover:border-solid"
+                  className="font-mono text-[10.5px] no-underline hover:border-solid"
+                  style={{
+                    color: '#c9a84c',
+                    borderBottom: '1px dotted rgba(201,168,76,.5)',
+                  }}
                 >
                   {l.label}
                 </a>
@@ -56,8 +50,18 @@ export default function StayCard({ status, name, details, links, isAlternative, 
             </p>
           )}
         </div>
-        <strong className="block text-[14px] text-ink font-semibold mt-1.5 leading-snug sm:text-[14.5px]">{name}</strong>
-        <span className="block text-muted text-[12px] mt-1 leading-relaxed sm:text-[12.5px]">{details}</span>
+        <strong
+          className="block text-[14.5px] font-semibold leading-snug"
+          style={{ color: '#f5f0e8' }}
+        >
+          {name}
+        </strong>
+        <span
+          className="block mt-1 leading-relaxed"
+          style={{ fontSize: 12.5, color: '#8a8070' }}
+        >
+          {details}
+        </span>
         {children}
       </div>
     </div>
