@@ -65,7 +65,8 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
     setUploading(true);
 
     const ext      = file.name.split('.').pop() ?? 'bin';
-    const filename = `${Date.now()}-${label.trim().replace(/\s+/g, '-').toLowerCase()}.${ext}`;
+    const slug     = label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const filename = `${Date.now()}-${slug}.${ext}`;
 
     const { error: uploadErr } = await supabase.storage.from('docs').upload(filename, file, { upsert: false });
     if (uploadErr) { setError(uploadErr.message); setUploading(false); return; }
