@@ -4,9 +4,10 @@ import Tag from './Tag';
 interface Props {
   event: EventData;
   hideIfSettled?: boolean;
+  onOpenDoc?: (label: string) => void;
 }
 
-export default function EventItem({ event, hideIfSettled }: Props) {
+export default function EventItem({ event, hideIfSettled, onOpenDoc }: Props) {
   const isSettled = event.tagVariant !== 'pending';
   if (hideIfSettled && isSettled) return null;
 
@@ -43,7 +44,29 @@ export default function EventItem({ event, hideIfSettled }: Props) {
             <p className="text-[13px] m-0 mt-0.5 leading-snug" style={{ color: '#8a8070' }}>{event.description}</p>
           )}
         </div>
-        <Tag label={event.tag} variant={event.tagVariant} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Tag label={event.tag} variant={event.tagVariant} />
+          {event.docLabel && onOpenDoc && (
+            <button
+              type="button"
+              onClick={() => onOpenDoc(event.docLabel!)}
+              title="View document"
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                color: '#c9a84c',
+                background: 'rgba(201,168,76,.08)',
+                border: '1px solid rgba(201,168,76,.25)',
+                borderRadius: 3,
+                padding: '3px 7px',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              📄
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Mobile: stacked layout */}
@@ -58,8 +81,27 @@ export default function EventItem({ event, hideIfSettled }: Props) {
         ) : (
           <p className="text-[12px] m-0 mt-0.5 leading-snug" style={{ color: '#8a8070' }}>{event.description}</p>
         )}
-        <div className="mt-1.5">
+        <div className="mt-1.5 flex items-center gap-2">
           <Tag label={event.tag} variant={event.tagVariant} />
+          {event.docLabel && onOpenDoc && (
+            <button
+              type="button"
+              onClick={() => onOpenDoc(event.docLabel!)}
+              title="View document"
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                color: '#c9a84c',
+                background: 'rgba(201,168,76,.08)',
+                border: '1px solid rgba(201,168,76,.25)',
+                borderRadius: 3,
+                padding: '3px 7px',
+                cursor: 'pointer',
+              }}
+            >
+              📄
+            </button>
+          )}
         </div>
       </div>
     </article>

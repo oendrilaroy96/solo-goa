@@ -4,9 +4,10 @@ import EventItem from './EventItem';
 interface Props {
   day: DayData;
   onlyOpen: boolean;
+  onOpenDoc?: (label: string) => void;
 }
 
-export default function DayPanel({ day, onlyOpen }: Props) {
+export default function DayPanel({ day, onlyOpen, onOpenDoc }: Props) {
   const events = day.events;
   const openCount = events.filter(e => e.tagVariant === 'pending').length;
   const confirmedCount = events.length - openCount;
@@ -83,7 +84,7 @@ export default function DayPanel({ day, onlyOpen }: Props) {
         style={{ borderLeft: '1px solid rgba(255,255,255,.08)' }}
       >
         {events.map(event => (
-          <EventItem key={event.time + event.title} event={event} hideIfSettled={onlyOpen} />
+          <EventItem key={event.time + event.title} event={event} hideIfSettled={onlyOpen} onOpenDoc={onOpenDoc} />
         ))}
       </div>
     </section>

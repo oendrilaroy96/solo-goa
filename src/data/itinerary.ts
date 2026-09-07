@@ -6,6 +6,7 @@ export interface EventItem {
   description: string; // HTML string
   tag: string;
   tagVariant: TagVariant;
+  docLabel?: string; // matches the label of a document in Supabase to link from this event
 }
 
 export interface DayData {

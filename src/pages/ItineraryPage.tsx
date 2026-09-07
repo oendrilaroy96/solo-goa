@@ -6,7 +6,11 @@ function getStoredDay(): string {
   try { return localStorage.getItem('goaSelectedDay') || '14'; } catch { return '14'; }
 }
 
-export default function ItineraryPage() {
+interface Props {
+  onOpenDoc?: (label: string) => void;
+}
+
+export default function ItineraryPage({ onOpenDoc }: Props) {
   const [selectedDay, setSelectedDay] = useState(getStoredDay);
 
   const activeDay = days.find(d => d.day === selectedDay) || days[0];
@@ -70,7 +74,7 @@ export default function ItineraryPage() {
         })}
       </div>
 
-      <DayPanel day={activeDay} onlyOpen={false} />
+      <DayPanel day={activeDay} onlyOpen={false} onOpenDoc={onOpenDoc} />
     </div>
   );
 }

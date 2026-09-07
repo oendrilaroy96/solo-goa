@@ -23,7 +23,12 @@ function publicUrl(filename: string): string {
   return data.publicUrl;
 }
 
-export default function DocsPage() {
+interface Props {
+  autoOpenLabel?: string | null;
+  onAutoOpenHandled?: () => void;
+}
+
+export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
   const [docs, setDocs]         = useState<RemoteDoc[]>([]);
   const [viewing, setViewing]   = useState<RemoteDoc | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -42,6 +47,16 @@ export default function DocsPage() {
   }
 
   useEffect(() => { fetchDocs(); }, []);
+
+  // Auto-open a doc by label when navigated from the itinerary
+  useEffect(() => {
+    if (!autoOpenLabel || !docs.length) return;
+    const match = docs.find(d => d.label === autoOpenLabel);
+    if (match) {
+      setViewing(match);
+      onAutoOpenHandled?.();
+    }
+  }, [autoOpenLabel, docs, onAutoOpenHandled]);
 
   async function handleUpload() {
     const file = fileRef.current?.files?.[0];

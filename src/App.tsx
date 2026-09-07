@@ -42,7 +42,15 @@ const fmt = (v: number) =>
 export default function App() {
   const [page, setPage] = useState<PageId>(getStoredPage);
   const [total, setTotal] = useState<number>(initTotal);
+  const [autoOpenDoc, setAutoOpenDoc] = useState<string | null>(null);
   const handleTotalChange = useCallback((t: number) => setTotal(t), []);
+
+  const openDoc = useCallback((label: string) => {
+    setAutoOpenDoc(label);
+    setPage('docs');
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    try { localStorage.setItem('goaSelectedPage', 'docs'); } catch { /* */ }
+  }, []);
 
   function selectPage(id: PageId) {
     setPage(id);
@@ -156,14 +164,14 @@ export default function App() {
             >
               {page === p.id && (
                 <>
-                  {p.id === 'itinerary'          && <ItineraryPage />}
+                  {p.id === 'itinerary'          && <ItineraryPage onOpenDoc={openDoc} />}
                   {p.id === 'stays'              && <StaysPage />}
                   {p.id === 'budget'             && <BudgetPage onTotalChange={handleTotalChange} />}
                   {p.id === 'food-reference'     && <FoodPage />}
                   {p.id === 'shopping-reference' && <ShoppingPage />}
                   {p.id === 'packing'            && <PackingPage />}
                   {p.id === 'checklist'          && <ChecklistPage />}
-                  {p.id === 'docs'               && <DocsPage />}
+                  {p.id === 'docs'               && <DocsPage autoOpenLabel={autoOpenDoc} onAutoOpenHandled={() => setAutoOpenDoc(null)} />}
                 </>
               )}
             </div>
