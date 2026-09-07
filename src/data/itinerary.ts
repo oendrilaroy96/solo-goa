@@ -31,6 +31,7 @@ export const days: DayData[] = [
         description: 'Balurghat → Sealdah overnight train. Booked and paid — ₹1,079.05.',
         tag: '₹1,079.05',
         tagVariant: 'default',
+        docLabel: 'Balurghat → Sealdah Train Ticket',
       },
       {
         time: 'Overnight',
