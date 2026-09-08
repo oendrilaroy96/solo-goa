@@ -88,7 +88,7 @@ export const budgetGroups: BudgetGroup[] = [
     name: 'Shopping & pre-trip',
     subtitle: 'Kolkata, 13 September',
     items: [
-      { id: 'roastery', label: 'Breakfast at Roastery Coffee House', sublabel: '13 September · Kolkata', defaultValue: 0 },
+      { id: 'roastery', label: 'Breakfast at Roastery Coffee House', sublabel: '13 September · Kolkata · est. ₹700–₹1,000', defaultValue: 850 },
       { id: 'crocs', label: 'Crocs, Mani Square Mall', sublabel: '13 September · Kolkata', defaultValue: 6000 },
       { id: 'westside-swimsuit', label: 'Swimsuit at Westside, Mani Square Mall', sublabel: '13 September · Kolkata · estimate', defaultValue: 2000 },
     ],
