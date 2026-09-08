@@ -72,7 +72,7 @@ export const budgetGroups: BudgetGroup[] = [
     items: [
       { id: 'taj-dinner', label: 'Dinner, drinks & snacks at Taj Holiday Village', sublabel: 'Evening of 14 September · rough estimate scaled from resort pricing plus 18% GST', defaultValue: 3500 },
       { id: 'cafe-tato', label: 'Breakfast at Cafe Tato', sublabel: '16 September · rough estimate from a directory\'s "cost for two" figure', defaultValue: 450 },
-      { id: 'lunch-16', label: 'Lunch, 16 September', sublabel: 'Annapurna Restaurant near Bom Jesus — a placeholder location, not booked', defaultValue: 0 },
+      { id: 'lunch-16', label: 'Lunch, 16 September', sublabel: 'Near Velha Goa — restaurant not yet decided · estimate', defaultValue: 350 },
       { id: 'ritz-classic', label: 'Dinner at Ritz Classic', sublabel: '15 September · reusing the ~₹400 fish thali figure for the same restaurant', defaultValue: 400 },
       { id: 'josephs-bar', label: "Drinks at Joseph's Bar", sublabel: '15 September · feni, urak & craft beer · estimate', defaultValue: 500 },
       { id: 'viva-panjim', label: 'Dinner at Viva Panjim', sublabel: '16 September · crab xec-xec, prawn vindaloo · est. ₹650–₹800/person without drinks', defaultValue: 750 },
