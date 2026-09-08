@@ -3,6 +3,7 @@ export interface ShopItem {
   name: string;
   details: string;
   links?: { label: string; url: string }[];
+  isPlanned?: boolean;
 }
 
 export interface ShopGroup {
@@ -49,31 +50,37 @@ export const shopGroups: ShopGroup[] = [
         status: 'Daily market',
         name: 'Panjim Municipal Market',
         details: 'Rua Heliodoro Salgado, Panaji. Roughly 7:30 AM–8 PM. Produce, spices, apparel and handicraft/souvenir stalls.',
+        isPlanned: true,
       },
       {
         status: 'Craft & lifestyle shops in Fontainhas',
         name: 'Velha Goa Galeria, Marcou Artifacts, Pausa Living, No Nasties',
         details: 'All confirmed real shops in the Fontainhas lanes: Velha Goa Galeria and Marcou Artifacts for hand-painted azulejo tiles, ceramics and Portuguese-style gift items; Pausa Living for Goan artisan crafts (notebooks, pottery, crochet); No Nasties for organic cotton clothing.',
+        isPlanned: true,
       },
       {
         status: 'Art prints',
         name: 'Mario Miranda Gallery',
         details: 'Natal Road, Fontainhas — prints and merchandise from the well-known Goan cartoonist.',
+        isPlanned: true,
       },
       {
         status: 'Boutique',
         name: "Sosa's",
         details: 'E-245, opposite the Foot Bridge, Altinho, Panjim (near where you\'ll already be for Sunaparanta and Kokni Kanteen on 17 September). Multi-designer Indo-western apparel boutique, roughly ₹2,000–8,000 per piece.',
+        isPlanned: true,
       },
       {
         status: 'Khadi outlet',
         name: 'Khadi India, Panjim',
         details: 'Atmaram Borkar Road, near the Municipality building. Khadi clothing, soaps and oils.',
+        isPlanned: true,
       },
       {
         status: 'Bookshops, lightly sourced',
         name: 'Broadway Book Centre & Varsha Book Stall',
         details: 'Listed Panjim bookshops near Caculo Circle/Azad Maidan — real businesses, but their specific stock isn\'t independently verified beyond directory listings.',
+        isPlanned: true,
       },
     ],
   },
