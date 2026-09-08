@@ -13,12 +13,12 @@ type PageId = 'itinerary' | 'stays' | 'budget' | 'food-reference' | 'shopping-re
 
 const PAGES: { id: PageId; label: string; short: string; icon: string }[] = [
   { id: 'itinerary',          label: 'Itinerary',    short: 'Itin',   icon: '🗓' },
-  { id: 'stays',              label: 'Stays',        short: 'Stays',  icon: '🏡' },
   { id: 'budget',             label: 'Budget',       short: 'Budget', icon: '💸' },
-  { id: 'food-reference',     label: 'Food & drink', short: 'Food',   icon: '🦞' },
-  { id: 'shopping-reference', label: 'Shopping',     short: 'Shop',   icon: '🛍' },
   { id: 'packing',            label: 'Packing',      short: 'Pack',   icon: '🎒' },
   { id: 'checklist',          label: 'Checklist',    short: 'List',   icon: '✅' },
+  { id: 'food-reference',     label: 'Food & drink', short: 'Food',   icon: '🦞' },
+  { id: 'shopping-reference', label: 'Shopping',     short: 'Shop',   icon: '🛍' },
+  { id: 'stays',              label: 'Stays',        short: 'Stays',  icon: '🏡' },
   { id: 'docs',               label: 'Documents',    short: 'Docs',   icon: '📁' },
 ];
 
