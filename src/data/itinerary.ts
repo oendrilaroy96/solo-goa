@@ -45,7 +45,7 @@ export const days: DayData[] = [
   {
     day: '13',
     weekday: 'Sunday',
-    subtitle: 'Arrive Sealdah, rest at Bhawanipur cousin\'s, last-minute shopping at H&M Elgin Road, check in to TaajKutir',
+    subtitle: 'Arrive Sealdah, rest at Bhawanipur cousin\'s, Roastery Coffee House, shopping at Mani Square, check in to TaajKutir',
     weather: '☁ Kolkata day',
     events: [
       {
@@ -56,25 +56,39 @@ export const days: DayData[] = [
         tagVariant: 'default',
       },
       {
-        time: '~5:00–10:30 AM',
+        time: '~5:00–8:00 AM',
         title: 'Rest at cousin\'s place, Bhawanipur',
-        description: 'A few hours to sleep, freshen up and have breakfast at the cousin\'s home before heading out.',
+        description: 'A few hours to sleep and freshen up before heading out.',
         tag: 'Rest',
         tagVariant: 'default',
       },
       {
-        time: '10:45 AM',
-        title: 'Leave Bhawanipur',
-        description: 'Head out from the cousin\'s place towards Elgin Road for last-minute shopping.',
+        time: '8:00 AM',
+        title: 'Leave cousin\'s place',
+        description: 'Head out from Bhawanipur towards Roastery Coffee House.',
         tag: 'Depart',
         tagVariant: 'default',
       },
       {
-        time: '~11:00 AM',
-        title: 'Last-minute shopping at H&M, Elgin Road',
-        description: `<p class="linkrow"><a href="https://www.google.com/maps/search/?api=1&query=H%26M+Elgin+Road+Kolkata" target="_blank" rel="noopener">Map</a></p><p>H&M store on Elgin Road, Kolkata. Last-minute holiday wardrobe essentials — light fabrics, a beach outfit, or anything you've forgotten to pack. Check store hours before heading in.</p>`,
+        time: '~8:15–10:00 AM',
+        title: 'Breakfast at Roastery Coffee House',
+        description: `<p class="linkrow"><a href="https://www.google.com/maps/search/?api=1&query=Roastery+Coffee+House+Kolkata" target="_blank" rel="noopener">Map</a></p><p>Breakfast and coffee before the shopping run.</p>`,
         tag: 'Cost TBD',
         tagVariant: 'pending',
+      },
+      {
+        time: '10:30–10:45 AM',
+        title: 'Arrive at Mani Square Mall',
+        description: `<p class="linkrow"><a href="https://www.google.com/maps/search/?api=1&query=Mani+Square+Mall+Kolkata" target="_blank" rel="noopener">Map</a></p><p>EM Bypass, Kolkata.</p>`,
+        tag: 'Shopping',
+        tagVariant: 'default',
+      },
+      {
+        time: '~10:45 AM–12:30 PM',
+        title: 'Crocs + Westside at Mani Square',
+        description: 'Pick up Crocs (~₹6,000) and check Westside for a swimsuit (~₹2,000). Both in the same mall.',
+        tag: '~₹8,000',
+        tagVariant: 'default',
       },
       {
         time: 'Afternoon',
