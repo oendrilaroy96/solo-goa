@@ -76,7 +76,7 @@ export const budgetGroups: BudgetGroup[] = [
       { id: 'ritz-classic', label: 'Dinner at Ritz Classic', sublabel: '15 September · reusing the ~₹400 fish thali figure for the same restaurant', defaultValue: 400 },
       { id: 'josephs-bar', label: "Drinks at Joseph's Bar", sublabel: '15 September · feni, urak & craft beer · estimate', defaultValue: 500 },
       { id: 'viva-panjim', label: 'Dinner at Viva Panjim', sublabel: '16 September · crab xec-xec, prawn vindaloo · est. ₹650–₹800/person without drinks', defaultValue: 750 },
-      { id: 'caravela-cafe', label: 'Breakfast at Caravela Cafe & Bistro', sublabel: '17 September · full breakfast + coffee · est. ₹400–₹650', defaultValue: 530 },
+      { id: 'caravela-cafe', label: 'Breakfast at Caravela Cafe & Bistro', sublabel: '17 September · full breakfast + coffee', defaultValue: 900 },
       { id: 'confeitaria', label: 'Confeitaria 31 de Janeiro', sublabel: '17 September · patties, rolls · est. ₹50–100 per item', defaultValue: 150 },
       { id: 'mr-baker', label: 'Mr Baker 1922', sublabel: '17 September · heritage bakery · estimate', defaultValue: 100 },
       { id: 'kokni-kanteen', label: 'Lunch at Kokni Kanteen', sublabel: '17 September · Konkani seafood thali · est. ₹350–₹480', defaultValue: 420 },
