@@ -1,7 +1,25 @@
-import type { DayData } from '../data/itinerary';
+import type { DayData, EventItem as EventData } from '../data/itinerary';
 import type { CustomEvent } from '../pages/ItineraryPage';
 import EventItem from './EventItem';
 import Tag from './Tag';
+
+// Parse a time string like "7:00 PM", "10:30 AM", "~3:30 PM", "Overnight" into minutes for sorting
+function parseTime(t: string): number {
+  const clean = t.replace(/^[~]/, '').trim();
+  // Non-clock entries go to end
+  const match = clean.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return 9999;
+  let h = parseInt(match[1]);
+  const m = parseInt(match[2]);
+  const ampm = match[3].toUpperCase();
+  if (ampm === 'PM' && h !== 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  return h * 60 + m;
+}
+
+type MergedEvent =
+  | { kind: 'static'; event: EventData }
+  | { kind: 'custom'; event: CustomEvent };
 
 interface Props {
   day: DayData;
@@ -55,14 +73,21 @@ export default function DayPanel({ day, onlyOpen, onOpenDoc, customEvents = [], 
         </div>
       </div>
 
-      {/* Timeline — static events */}
+      {/* Timeline — static + custom events merged and sorted by time */}
       <div className="relative pl-6" style={{ borderLeft: '1px solid rgba(255,255,255,.08)' }}>
-        {events.map(event => (
-          <EventItem key={event.time + event.title} event={event} hideIfSettled={onlyOpen} onOpenDoc={onOpenDoc} />
-        ))}
-
-        {/* Custom events */}
-        {customEvents.map(ev => (
+        {((): MergedEvent[] => {
+          const merged: MergedEvent[] = [
+            ...events.map(e => ({ kind: 'static' as const, event: e })),
+            ...customEvents.map(e => ({ kind: 'custom' as const, event: e })),
+          ];
+          merged.sort((a, b) => parseTime(a.event.time) - parseTime(b.event.time));
+          return merged;
+        })().map(item => {
+          if (item.kind === 'static') {
+            return <EventItem key={item.event.time + item.event.title} event={item.event} hideIfSettled={onlyOpen} onOpenDoc={onOpenDoc} />;
+          }
+          const ev = item.event;
+          return (
           <article
             key={ev.id}
             className="relative mb-5
@@ -110,7 +135,8 @@ export default function DayPanel({ day, onlyOpen, onOpenDoc, customEvents = [], 
               {ev.tag && <div className="mt-1.5"><Tag label={ev.tag} variant={ev.tagVariant} /></div>}
             </div>
           </article>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
