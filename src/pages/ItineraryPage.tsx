@@ -224,9 +224,16 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
       docLabel: draft.docLabel.trim() || undefined,
     };
     const next = allDays.map(d => {
-      if (d.id !== activeDay.id) return d;
+      if (d.day !== activeDay.day) return d;
       if (editing) {
-        return { ...d, events: d.events.map(e => e.id === editing.id ? { ...e, ...clean } : e) };
+        return {
+          ...d,
+          events: d.events.map(e =>
+            (e.id && e.id === editing.id) || (!e.id && e.time === editing.time && e.title === editing.title)
+              ? { ...e, ...clean }
+              : e
+          ),
+        };
       }
       return { ...d, events: [...d.events, { ...clean, id: newEventId() } as EventItem] };
     });
@@ -256,7 +263,7 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
   async function handleDeleteEvent(evId: string) {
     if (!activeDay) return;
     const next = allDays.map(d =>
-      d.id === activeDay.id ? { ...d, events: d.events.filter(e => e.id !== evId) } : d
+      d.day === activeDay.day ? { ...d, events: d.events.filter(e => e.id !== evId) } : d
     );
     await persist(next);
   }
