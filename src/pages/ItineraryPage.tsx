@@ -3,6 +3,60 @@ import type { DayData, EventItem, TagVariant } from '../data/itinerary';
 import DayPanel from '../components/DayPanel';
 import { loadItinerary, saveItinerary, newEventId, newDayId } from '../lib/itinerary-store';
 
+// ─── time overlap helpers ─────────────────────────────────────────────────────
+
+function parseTimeRange(t: string): { start: number; end: number } | null {
+  const clean = t.replace(/^[~From\s]+/i, '').trim();
+  const parts = clean.split(/[–-]/).map(s => s.trim()).filter(Boolean);
+
+  const toMin = (s: string, fallbackAmPm: string | null): number | null => {
+    const ap = (s.match(/(AM|PM)/i)?.[1] ?? fallbackAmPm ?? '').toUpperCase();
+    const m = s.match(/(\d{1,2}):(\d{2})/);
+    if (!m) return null;
+    let h = parseInt(m[1]);
+    const min = parseInt(m[2]);
+    if (ap === 'PM' && h !== 12) h += 12;
+    if (ap === 'AM' && h === 12) h = 0;
+    return h * 60 + min;
+  };
+
+  if (parts.length >= 2) {
+    const last = parts[parts.length - 1];
+    const ampm = last.match(/(AM|PM)/i)?.[1] ?? null;
+    const start = toMin(parts[0], ampm);
+    const end   = toMin(last, null);
+    if (start !== null && end !== null) return { start, end: end <= start ? start + 30 : end };
+  }
+
+  // Single time like "4:00 PM"
+  const m = clean.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (m) {
+    let h = parseInt(m[1]);
+    const min = parseInt(m[2]);
+    if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+    if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
+    const s = h * 60 + min;
+    return { start: s, end: s + 30 };
+  }
+
+  return null;
+}
+
+function overlaps(a: { start: number; end: number }, b: { start: number; end: number }) {
+  return a.start < b.end && b.start < a.end;
+}
+
+function findConflict(events: EventItem[], newTime: string, excludeId?: string): EventItem | null {
+  const newRange = parseTimeRange(newTime);
+  if (!newRange) return null;
+  for (const ev of events) {
+    if (ev.id === excludeId) continue;
+    const r = parseTimeRange(ev.time);
+    if (r && overlaps(newRange, r)) return ev;
+  }
+  return null;
+}
+
 // ─── types ────────────────────────────────────────────────────────────────────
 
 type EventDraft = { time: string; title: string; description: string; tag: string; tagVariant: TagVariant };
@@ -63,6 +117,7 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
   const [showForm, setShowForm]   = useState(false);
   const [editing, setEditing]     = useState<EventItem | null>(null);
   const [draft, setDraft]         = useState<EventDraft>(BLANK_EVENT());
+  const [conflict, setConflict]   = useState<EventItem | null>(null);
 
   // day form
   const [showDayForm, setShowDayForm] = useState(false);
@@ -113,7 +168,7 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
     setDraft(BLANK_EVENT());
   }
 
-  async function handleSubmitEvent() {
+  async function commitEvent() {
     if (!draft.title.trim() || !activeDay) return;
     const next = allDays.map(d => {
       if (d.id !== activeDay.id) return d;
@@ -124,6 +179,25 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
     });
     await persist(next);
     cancelEvent();
+  }
+
+  async function handleSubmitEvent() {
+    if (!draft.title.trim() || !activeDay) return;
+    if (draft.time.trim()) {
+      const clash = findConflict(activeDay.events, draft.time, editing?.id);
+      if (clash) { setConflict(clash); return; }
+    }
+    await commitEvent();
+  }
+
+  async function handleSubmitForce() {
+    setConflict(null);
+    await commitEvent();
+  }
+
+  function handleConflictEditExisting(ev: EventItem) {
+    setConflict(null);
+    openEdit(ev);
   }
 
   async function handleDeleteEvent(evId: string) {
@@ -359,6 +433,62 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <button type="button" onClick={cancelEvent} style={BTN_CANCEL}>Cancel</button>
             <button type="button" onClick={handleSubmitEvent} style={BTN_SAVE}>{editing ? 'Save' : 'Add'}</button>
+          </div>
+        </div>
+      )}
+
+      {/* Conflict modal */}
+      {conflict && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgba(0,0,0,.7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '0 16px',
+          }}
+          onClick={() => setConflict(null)}
+        >
+          <div
+            className="luxury-card"
+            style={{ maxWidth: 420, width: '100%', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+                Time conflict
+              </div>
+              <p style={{ margin: 0, fontSize: 14, color: '#f5f0e8', lineHeight: 1.5 }}>
+                <strong style={{ color: '#c9a84c' }}>{draft.time}</strong> overlaps with an existing event:
+              </p>
+              <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(255,255,255,.04)', borderLeft: '2px solid rgba(201,168,76,.4)', borderRadius: 2 }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#c9a84c' }}>{conflict.time}</div>
+                <div style={{ fontSize: 13, color: '#f5f0e8', marginTop: 2 }}>{conflict.title}</div>
+              </div>
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: '#8a8070' }}>What would you like to do?</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setConflict(null)}
+                style={{ ...BTN_SAVE, textAlign: 'center' }}
+              >
+                Change my time
+              </button>
+              <button
+                type="button"
+                onClick={() => handleConflictEditExisting(conflict)}
+                style={{ ...BTN_CANCEL, textAlign: 'center' }}
+              >
+                Edit existing event instead
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmitForce}
+                style={{ ...BTN_CANCEL, textAlign: 'center', color: 'rgba(138,128,112,.6)', borderColor: 'rgba(255,255,255,.06)' }}
+              >
+                Add anyway
+              </button>
+            </div>
           </div>
         </div>
       )}
