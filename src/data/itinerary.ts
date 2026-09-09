@@ -1,6 +1,7 @@
 export type TagVariant = 'default' | 'free' | 'pending';
 
 export interface EventItem {
+  id?: string;
   time: string;
   title: string;
   description: string; // HTML string
@@ -10,6 +11,7 @@ export interface EventItem {
 }
 
 export interface DayData {
+  id?: string;
   day: string;
   weekday: string;
   subtitle: string;

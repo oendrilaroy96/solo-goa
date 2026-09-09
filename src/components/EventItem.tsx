@@ -5,9 +5,11 @@ interface Props {
   event: EventData;
   hideIfSettled?: boolean;
   onOpenDoc?: (label: string) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export default function EventItem({ event, hideIfSettled, onOpenDoc }: Props) {
+export default function EventItem({ event, hideIfSettled, onOpenDoc, onEdit, onDelete }: Props) {
   const isSettled = event.tagVariant !== 'pending';
   if (hideIfSettled && isSettled) return null;
 
@@ -44,7 +46,7 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc }: Props) {
             <p className="text-[13px] m-0 mt-0.5 leading-snug" style={{ color: '#8a8070' }}>{event.description}</p>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Tag label={event.tag} variant={event.tagVariant} />
           {event.docLabel && onOpenDoc && (
             <button
@@ -66,12 +68,24 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc }: Props) {
               📄
             </button>
           )}
+          {onEdit && (
+            <button type="button" onClick={onEdit} title="Edit" style={{ background: 'none', border: 'none', color: '#8a8070', cursor: 'pointer', fontSize: 13, padding: '2px 4px', lineHeight: 1 }}>✏</button>
+          )}
+          {onDelete && (
+            <button type="button" onClick={onDelete} title="Delete" style={{ background: 'none', border: 'none', color: '#8a8070', cursor: 'pointer', fontSize: 15, padding: '2px 4px', lineHeight: 1 }}>×</button>
+          )}
         </div>
       </div>
 
       {/* Mobile: stacked layout */}
       <div className="sm:hidden">
-        <h3 className="mt-0 mb-0 text-[13.5px] font-semibold leading-snug" style={{ color: '#f5f0e8' }}>{event.title}</h3>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+          <h3 className="mt-0 mb-0 text-[13.5px] font-semibold leading-snug" style={{ color: '#f5f0e8' }}>{event.title}</h3>
+          <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+            {onEdit && <button type="button" onClick={onEdit} title="Edit" style={{ background: 'none', border: 'none', color: '#8a8070', cursor: 'pointer', fontSize: 13, padding: '0 2px', lineHeight: 1 }}>✏</button>}
+            {onDelete && <button type="button" onClick={onDelete} title="Delete" style={{ background: 'none', border: 'none', color: '#8a8070', cursor: 'pointer', fontSize: 15, padding: '0 2px', lineHeight: 1 }}>×</button>}
+          </div>
+        </div>
         {hasHtml ? (
           <div
             className="text-[12px] mt-0.5 [&_p]:m-0 [&_a]:font-mono [&_a]:text-[10px] [&_a]:no-underline [&_a]:border-b [&_a]:border-dotted [&_a]:mr-2 [&_strong]:font-semibold"

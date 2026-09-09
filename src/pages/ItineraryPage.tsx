@@ -1,36 +1,17 @@
 import { useState, useEffect } from 'react';
-import { days } from '../data/itinerary';
-import type { TagVariant } from '../data/itinerary';
+import type { DayData, EventItem, TagVariant } from '../data/itinerary';
 import DayPanel from '../components/DayPanel';
-import { supabase } from '../lib/supabase';
+import { loadItinerary, saveItinerary, newEventId, newDayId } from '../lib/itinerary-store';
 
-const SUPA_KEY = 'custom_events';
+// ─── types ────────────────────────────────────────────────────────────────────
 
-export interface CustomEvent {
-  id: string;
-  day: string;
-  time: string;
-  title: string;
-  description: string;
-  tag: string;
-  tagVariant: TagVariant;
-}
+type EventDraft = { time: string; title: string; description: string; tag: string; tagVariant: TagVariant };
+type DayDraft   = { day: string; weekday: string; subtitle: string; weather: string };
 
-function getStoredDay(): string {
-  try { return localStorage.getItem('goaSelectedDay') || '14'; } catch { return '14'; }
-}
+const BLANK_EVENT = (): EventDraft => ({ time: '', title: '', description: '', tag: '', tagVariant: 'default' });
+const BLANK_DAY   = (): DayDraft   => ({ day: '', weekday: '', subtitle: '', weather: '' });
 
-function newId() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
-const BLANK = (): Omit<CustomEvent, 'id' | 'day'> => ({
-  time: '',
-  title: '',
-  description: '',
-  tag: '',
-  tagVariant: 'default',
-});
+// ─── styles ───────────────────────────────────────────────────────────────────
 
 const INPUT = (extra?: React.CSSProperties): React.CSSProperties => ({
   background: '#0d0d0d',
@@ -45,133 +26,266 @@ const INPUT = (extra?: React.CSSProperties): React.CSSProperties => ({
   ...extra,
 });
 
+const BTN_CANCEL: React.CSSProperties = {
+  fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
+  textTransform: 'uppercase', letterSpacing: '0.08em',
+  color: '#8a8070', background: 'transparent',
+  border: '1px solid rgba(255,255,255,.1)', borderRadius: 3,
+  padding: '8px 16px', cursor: 'pointer',
+};
+
+const BTN_SAVE: React.CSSProperties = {
+  fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
+  textTransform: 'uppercase', letterSpacing: '0.08em',
+  color: '#0d0d0d', background: '#c9a84c',
+  border: 'none', borderRadius: 3,
+  padding: '8px 20px', cursor: 'pointer',
+};
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
+function getStoredDay(): string {
+  try { return localStorage.getItem('goaSelectedDay') || '14'; } catch { return '14'; }
+}
+
+// ─── component ────────────────────────────────────────────────────────────────
+
 interface Props {
   onOpenDoc?: (label: string) => void;
 }
 
 export default function ItineraryPage({ onOpenDoc }: Props) {
+  const [allDays, setAllDays]       = useState<DayData[]>([]);
+  const [loading, setLoading]       = useState(true);
   const [selectedDay, setSelectedDay] = useState(getStoredDay);
-  const [customEvents, setCustomEvents] = useState<CustomEvent[]>([]);
 
-  // form state
+  // event form
   const [showForm, setShowForm]   = useState(false);
-  const [editing, setEditing]     = useState<CustomEvent | null>(null);
-  const [draft, setDraft]         = useState(BLANK());
+  const [editing, setEditing]     = useState<EventItem | null>(null);
+  const [draft, setDraft]         = useState<EventDraft>(BLANK_EVENT());
 
-  const activeDay = days.find(d => d.day === selectedDay) || days[0];
+  // day form
+  const [showDayForm, setShowDayForm] = useState(false);
+  const [dayDraft, setDayDraft]       = useState<DayDraft>(BLANK_DAY());
+
+  // ── load ──────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    loadItinerary().then(days => { setAllDays(days); setLoading(false); });
+  }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem('goaSelectedDay', selectedDay); } catch { /* */ }
+    cancelEvent();
+  }, [selectedDay]);
+
+  // ── derived ───────────────────────────────────────────────────────────────
+
   const todayDate = new Date();
   const isTrip    = todayDate.getFullYear() === 2026 && todayDate.getMonth() === 8;
   const todayStr  = isTrip ? String(todayDate.getDate()) : null;
+  const activeDay = allDays.find(d => d.day === selectedDay) ?? allDays[0];
 
-  // Load from Supabase
-  useEffect(() => {
-    supabase.from('kv').select('value').eq('key', SUPA_KEY).maybeSingle().then(({ data }) => {
-      if (data?.value && Array.isArray(data.value)) {
-        setCustomEvents(data.value as CustomEvent[]);
-      }
-    });
-  }, []);
+  // ── persistence ───────────────────────────────────────────────────────────
 
-  async function save(events: CustomEvent[]) {
-    setCustomEvents(events);
-    await supabase.from('kv').upsert({ key: SUPA_KEY, value: events });
+  async function persist(next: DayData[]) {
+    setAllDays(next);
+    await saveItinerary(next);
   }
+
+  // ── event CRUD ────────────────────────────────────────────────────────────
 
   function openAdd() {
     setEditing(null);
-    setDraft(BLANK());
+    setDraft(BLANK_EVENT());
     setShowForm(true);
   }
 
-  function openEdit(ev: CustomEvent) {
+  function openEdit(ev: EventItem) {
     setEditing(ev);
     setDraft({ time: ev.time, title: ev.title, description: ev.description, tag: ev.tag, tagVariant: ev.tagVariant });
     setShowForm(true);
   }
 
-  function cancel() {
+  function cancelEvent() {
     setShowForm(false);
     setEditing(null);
-    setDraft(BLANK());
+    setDraft(BLANK_EVENT());
   }
 
-  async function handleSubmit() {
-    if (!draft.title.trim()) return;
-    if (editing) {
-      const next = customEvents.map(e => e.id === editing.id ? { ...editing, ...draft } : e);
-      await save(next);
-    } else {
-      const next = [...customEvents, { id: newId(), day: selectedDay, ...draft }];
-      await save(next);
-    }
-    cancel();
+  async function handleSubmitEvent() {
+    if (!draft.title.trim() || !activeDay) return;
+    const next = allDays.map(d => {
+      if (d.id !== activeDay.id) return d;
+      if (editing) {
+        return { ...d, events: d.events.map(e => e.id === editing.id ? { ...e, ...draft } : e) };
+      }
+      return { ...d, events: [...d.events, { ...draft, id: newEventId() }] };
+    });
+    await persist(next);
+    cancelEvent();
   }
 
-  async function handleDelete(id: string) {
-    await save(customEvents.filter(e => e.id !== id));
+  async function handleDeleteEvent(evId: string) {
+    if (!activeDay) return;
+    const next = allDays.map(d =>
+      d.id === activeDay.id ? { ...d, events: d.events.filter(e => e.id !== evId) } : d
+    );
+    await persist(next);
   }
 
-  useEffect(() => {
-    try { localStorage.setItem('goaSelectedDay', selectedDay); } catch { /* */ }
-    // close form when switching days
-    cancel();
-  }, [selectedDay]);
+  // ── day CRUD ──────────────────────────────────────────────────────────────
 
-  const dayCustomEvents = customEvents.filter(e => e.day === selectedDay);
+  async function handleDeleteDay(dayId: string) {
+    const next = allDays.filter(d => d.id !== dayId);
+    if (activeDay?.id === dayId && next.length > 0) setSelectedDay(next[0].day);
+    await persist(next);
+  }
+
+  async function handleAddDay() {
+    if (!dayDraft.day.trim() || !dayDraft.weekday.trim()) return;
+    const newDay: DayData = { ...dayDraft, id: newDayId(dayDraft.day), events: [] };
+    const next = [...allDays, newDay];
+    await persist(next);
+    setSelectedDay(dayDraft.day);
+    setShowDayForm(false);
+    setDayDraft(BLANK_DAY());
+  }
+
+  // ── render ────────────────────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div style={{ color: '#8a8070', fontFamily: 'var(--font-mono)', fontSize: 12, padding: 40 }}>
+        Loading itinerary…
+      </div>
+    );
+  }
 
   return (
     <div>
       {/* Day selector tabs */}
       <div
-        className="flex gap-0 mb-8 overflow-x-auto pb-0"
+        className="flex gap-0 mb-8 overflow-x-auto pb-0 items-end"
         style={{ scrollbarWidth: 'none', borderBottom: '1px solid rgba(255,255,255,.07)' }}
         role="tablist"
         aria-label="Select a day"
       >
-        {days.map(d => {
+        {allDays.map(d => {
           const isActive = d.day === selectedDay;
           const isToday  = d.day === todayStr;
           return (
-            <button
-              key={d.day}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => setSelectedDay(d.day)}
-              className="relative shrink-0 cursor-pointer text-center transition-all focus-visible:outline-none"
-              style={{
-                padding: '10px 16px 12px',
-                background: 'transparent',
-                border: 0,
-                borderBottom: isActive ? '2px solid #c9a84c' : '2px solid transparent',
-                marginBottom: -1,
-              }}
-            >
-              <span className="block font-mono text-[14px] font-semibold tabular-nums" style={{ color: isActive ? '#c9a84c' : '#8a8070' }}>
-                {d.day}
-              </span>
-              <span className="block font-mono text-[9px] uppercase tracking-[.06em] mt-0.5" style={{ color: isActive ? 'rgba(201,168,76,.7)' : 'rgba(138,128,112,.6)' }}>
-                {d.weekday.slice(0, 3)}
-              </span>
-              {isToday && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: '#c9a84c' }} title="Today" />
-              )}
-            </button>
+            <div key={d.id} style={{ position: 'relative', flexShrink: 0 }}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setSelectedDay(d.day)}
+                className="relative cursor-pointer text-center transition-all focus-visible:outline-none"
+                style={{
+                  padding: '10px 20px 12px 16px',
+                  background: 'transparent',
+                  border: 0,
+                  borderBottom: isActive ? '2px solid #c9a84c' : '2px solid transparent',
+                  marginBottom: -1,
+                  display: 'block',
+                }}
+              >
+                <span className="block font-mono text-[14px] font-semibold tabular-nums" style={{ color: isActive ? '#c9a84c' : '#8a8070' }}>
+                  {d.day}
+                </span>
+                <span className="block font-mono text-[9px] uppercase tracking-[.06em] mt-0.5" style={{ color: isActive ? 'rgba(201,168,76,.7)' : 'rgba(138,128,112,.6)' }}>
+                  {d.weekday.slice(0, 3)}
+                </span>
+                {isToday && (
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: '#c9a84c' }} title="Today" />
+                )}
+              </button>
+              {/* Delete day button */}
+              <button
+                type="button"
+                title={`Delete ${d.weekday} ${d.day}`}
+                onClick={() => { if (confirm(`Delete day ${d.day} (${d.weekday})?`)) handleDeleteDay(d.id!); }}
+                style={{
+                  position: 'absolute', top: 4, right: 2,
+                  background: 'none', border: 'none',
+                  color: 'rgba(138,128,112,.35)', cursor: 'pointer',
+                  fontSize: 11, lineHeight: 1, padding: '2px 3px',
+                }}
+              >
+                ×
+              </button>
+            </div>
           );
         })}
+
+        {/* Add day */}
+        <button
+          type="button"
+          onClick={() => setShowDayForm(v => !v)}
+          style={{
+            alignSelf: 'center',
+            background: 'none',
+            border: '1px dashed rgba(201,168,76,.3)',
+            borderRadius: 2,
+            color: '#c9a84c',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 11,
+            padding: '4px 10px',
+            marginLeft: 8,
+            flexShrink: 0,
+            marginBottom: 2,
+          }}
+        >
+          + day
+        </button>
       </div>
 
-      <DayPanel
-        day={activeDay}
-        onlyOpen={false}
-        onOpenDoc={onOpenDoc}
-        customEvents={dayCustomEvents}
-        onEditCustom={openEdit}
-        onDeleteCustom={handleDelete}
-      />
+      {/* Add day form */}
+      {showDayForm && (
+        <div className="luxury-card" style={{ marginBottom: 24, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            New day
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase' }}>Day #</label>
+              <input type="text" placeholder="19" value={dayDraft.day} onChange={e => setDayDraft(d => ({ ...d, day: e.target.value }))} style={INPUT()} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase' }}>Weekday</label>
+              <input type="text" placeholder="Saturday" value={dayDraft.weekday} onChange={e => setDayDraft(d => ({ ...d, weekday: e.target.value }))} style={INPUT()} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase' }}>Weather</label>
+              <input type="text" placeholder="☀ 28°C" value={dayDraft.weather} onChange={e => setDayDraft(d => ({ ...d, weather: e.target.value }))} style={INPUT()} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase' }}>Subtitle</label>
+            <input type="text" placeholder="Short summary of the day" value={dayDraft.subtitle} onChange={e => setDayDraft(d => ({ ...d, subtitle: e.target.value }))} style={INPUT()} />
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <button type="button" onClick={() => { setShowDayForm(false); setDayDraft(BLANK_DAY()); }} style={BTN_CANCEL}>Cancel</button>
+            <button type="button" onClick={handleAddDay} style={BTN_SAVE}>Add</button>
+          </div>
+        </div>
+      )}
+
+      {/* Day panel */}
+      {activeDay && (
+        <DayPanel
+          day={activeDay}
+          onlyOpen={false}
+          onOpenDoc={onOpenDoc}
+          onEditEvent={openEdit}
+          onDeleteEvent={handleDeleteEvent}
+        />
+      )}
 
       {/* Add event button */}
-      {!showForm && (
+      {!showForm && activeDay && (
         <button
           type="button"
           onClick={openAdd}
@@ -191,18 +305,18 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
             width: '100%',
           }}
         >
-          + Add event to {activeDay.weekday} {activeDay.day} Sep
+          + Add event to {activeDay.weekday} {activeDay.day}
         </button>
       )}
 
-      {/* Inline form */}
+      {/* Event form */}
       {showForm && (
         <div
           className="luxury-card"
           style={{ marginTop: 24, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}
         >
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
-            {editing ? 'Edit event' : `New event — ${activeDay.weekday} ${activeDay.day} Sep`}
+            {editing ? 'Edit event' : `New event — ${activeDay?.weekday} ${activeDay?.day}`}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12 }}>
@@ -243,12 +357,8 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
           </div>
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <button type="button" onClick={cancel} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#8a8070', background: 'transparent', border: '1px solid rgba(255,255,255,.1)', borderRadius: 3, padding: '8px 16px', cursor: 'pointer' }}>
-              Cancel
-            </button>
-            <button type="button" onClick={handleSubmit} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#0d0d0d', background: '#c9a84c', border: 'none', borderRadius: 3, padding: '8px 20px', cursor: 'pointer' }}>
-              {editing ? 'Save' : 'Add'}
-            </button>
+            <button type="button" onClick={cancelEvent} style={BTN_CANCEL}>Cancel</button>
+            <button type="button" onClick={handleSubmitEvent} style={BTN_SAVE}>{editing ? 'Save' : 'Add'}</button>
           </div>
         </div>
       )}
