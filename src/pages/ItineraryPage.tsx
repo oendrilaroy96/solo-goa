@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import type { DayData, EventItem, TagVariant } from '../data/itinerary';
+import type { DayData, EventItem, TagVariant, EventCategory } from '../data/itinerary';
+import { EVENT_CATEGORIES, CATEGORY_ICON, CATEGORY_LABEL } from '../data/itinerary';
 import DayPanel from '../components/DayPanel';
 import { loadItinerary, saveItinerary, newEventId, newDayId } from '../lib/itinerary-store';
+import { supabase } from '../lib/supabase';
 
 // ─── time overlap helpers ─────────────────────────────────────────────────────
 
@@ -59,10 +61,18 @@ function findConflict(events: EventItem[], newTime: string, excludeId?: string):
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
-type EventDraft = { time: string; title: string; description: string; tag: string; tagVariant: TagVariant };
-type DayDraft   = { day: string; weekday: string; subtitle: string; weather: string };
+type EventDraft = {
+  time: string; title: string; description: string;
+  tag: string; tagVariant: TagVariant;
+  categories: EventCategory[];
+  phone: string; email: string; mapUrl: string; docLabel: string;
+};
+type DayDraft = { day: string; weekday: string; subtitle: string; weather: string };
 
-const BLANK_EVENT = (): EventDraft => ({ time: '', title: '', description: '', tag: '', tagVariant: 'default' });
+const BLANK_EVENT = (): EventDraft => ({
+  time: '', title: '', description: '', tag: '', tagVariant: 'default',
+  categories: [], phone: '', email: '', mapUrl: '', docLabel: '',
+});
 const BLANK_DAY   = (): DayDraft   => ({ day: '', weekday: '', subtitle: '', weather: '' });
 
 // ─── styles ───────────────────────────────────────────────────────────────────
@@ -79,6 +89,11 @@ const INPUT = (extra?: React.CSSProperties): React.CSSProperties => ({
   boxSizing: 'border-box' as const,
   ...extra,
 });
+
+const LBL: React.CSSProperties = {
+  fontFamily: 'var(--font-mono)', fontSize: 10,
+  color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.08em',
+};
 
 const BTN_CANCEL: React.CSSProperties = {
   fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
@@ -109,9 +124,10 @@ interface Props {
 }
 
 export default function ItineraryPage({ onOpenDoc }: Props) {
-  const [allDays, setAllDays]       = useState<DayData[]>([]);
-  const [loading, setLoading]       = useState(true);
+  const [allDays, setAllDays]         = useState<DayData[]>([]);
+  const [loading, setLoading]         = useState(true);
   const [selectedDay, setSelectedDay] = useState(getStoredDay);
+  const [docLabels, setDocLabels]     = useState<string[]>([]);
 
   // event form
   const [showForm, setShowForm]   = useState(false);
@@ -127,6 +143,9 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
 
   useEffect(() => {
     loadItinerary().then(days => { setAllDays(days); setLoading(false); });
+    supabase.from('documents').select('label').order('label').then(({ data }) => {
+      if (data) setDocLabels(data.map((d: { label: string }) => d.label));
+    });
   }, []);
 
   useEffect(() => {
@@ -158,7 +177,13 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
 
   function openEdit(ev: EventItem) {
     setEditing(ev);
-    setDraft({ time: ev.time, title: ev.title, description: ev.description, tag: ev.tag, tagVariant: ev.tagVariant });
+    setDraft({
+      time: ev.time, title: ev.title, description: ev.description,
+      tag: ev.tag, tagVariant: ev.tagVariant,
+      categories: ev.categories ?? [],
+      phone: ev.phone ?? '', email: ev.email ?? '',
+      mapUrl: ev.mapUrl ?? '', docLabel: ev.docLabel ?? '',
+    });
     setShowForm(true);
   }
 
@@ -170,12 +195,21 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
 
   async function commitEvent() {
     if (!draft.title.trim() || !activeDay) return;
+    const clean: Partial<EventItem> = {
+      time: draft.time, title: draft.title, description: draft.description,
+      tag: draft.tag, tagVariant: draft.tagVariant,
+      categories: draft.categories.length ? draft.categories : undefined,
+      phone: draft.phone.trim() || undefined,
+      email: draft.email.trim() || undefined,
+      mapUrl: draft.mapUrl.trim() || undefined,
+      docLabel: draft.docLabel.trim() || undefined,
+    };
     const next = allDays.map(d => {
       if (d.id !== activeDay.id) return d;
       if (editing) {
-        return { ...d, events: d.events.map(e => e.id === editing.id ? { ...e, ...draft } : e) };
+        return { ...d, events: d.events.map(e => e.id === editing.id ? { ...e, ...clean } : e) };
       }
-      return { ...d, events: [...d.events, { ...draft, id: newEventId() }] };
+      return { ...d, events: [...d.events, { ...clean, id: newEventId() } as EventItem] };
     });
     await persist(next);
     cancelEvent();
@@ -387,25 +421,61 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
       {showForm && (
         <div
           className="luxury-card"
-          style={{ marginTop: 24, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}
+          style={{ marginTop: 24, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}
         >
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             {editing ? 'Edit event' : `New event — ${activeDay?.weekday} ${activeDay?.day}`}
           </div>
 
+          {/* Time + Title */}
           <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Time</label>
+              <label style={LBL}>Time</label>
               <input type="text" placeholder="e.g. 3:00 PM" value={draft.time} onChange={e => setDraft(d => ({ ...d, time: e.target.value }))} style={INPUT()} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Title *</label>
+              <label style={LBL}>Title *</label>
               <input type="text" placeholder="What's happening?" value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} style={INPUT()} />
             </div>
           </div>
 
+          {/* Category chips */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={LBL}>Category</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {EVENT_CATEGORIES.map(cat => {
+                const active = draft.categories.includes(cat);
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setDraft(d => ({
+                      ...d,
+                      categories: active ? d.categories.filter(c => c !== cat) : [...d.categories, cat],
+                    }))}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 10,
+                      padding: '4px 8px',
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      border: active ? '1px solid rgba(201,168,76,.6)' : '1px solid rgba(255,255,255,.1)',
+                      background: active ? 'rgba(201,168,76,.12)' : 'rgba(255,255,255,.03)',
+                      color: active ? '#c9a84c' : '#8a8070',
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                    }}
+                  >
+                    <span aria-hidden="true">{CATEGORY_ICON[cat]}</span>
+                    {CATEGORY_LABEL[cat]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Notes */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Notes</label>
+            <label style={LBL}>Notes</label>
             <textarea
               placeholder="Optional details..."
               value={draft.description}
@@ -415,13 +485,45 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
             />
           </div>
 
+          {/* Phone + Email */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={LBL}>Phone</label>
+              <input type="tel" placeholder="+91 98765 43210" value={draft.phone} onChange={e => setDraft(d => ({ ...d, phone: e.target.value }))} style={INPUT()} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={LBL}>Email</label>
+              <input type="email" placeholder="hello@place.com" value={draft.email} onChange={e => setDraft(d => ({ ...d, email: e.target.value }))} style={INPUT()} />
+            </div>
+          </div>
+
+          {/* Map URL */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={LBL}>Map link</label>
+            <input type="url" placeholder="https://maps.google.com/..." value={draft.mapUrl} onChange={e => setDraft(d => ({ ...d, mapUrl: e.target.value }))} style={INPUT()} />
+          </div>
+
+          {/* Doc picker */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={LBL}>Attach document</label>
+            <select
+              value={draft.docLabel}
+              onChange={e => setDraft(d => ({ ...d, docLabel: e.target.value }))}
+              style={{ ...INPUT(), padding: '8px 10px' }}
+            >
+              <option value="">— none —</option>
+              {docLabels.map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </div>
+
+          {/* Tag/Cost + Status */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px', gap: 12 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Tag / Cost</label>
+              <label style={LBL}>Tag / Cost</label>
               <input type="text" placeholder="e.g. ₹500 or Free" value={draft.tag} onChange={e => setDraft(d => ({ ...d, tag: e.target.value }))} style={INPUT()} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Status</label>
+              <label style={LBL}>Status</label>
               <select value={draft.tagVariant} onChange={e => setDraft(d => ({ ...d, tagVariant: e.target.value as TagVariant }))} style={{ ...INPUT(), padding: '8px 10px' }}>
                 <option value="default">Confirmed</option>
                 <option value="pending">Pending</option>

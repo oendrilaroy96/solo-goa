@@ -1,5 +1,45 @@
 export type TagVariant = 'default' | 'free' | 'pending';
 
+export const EVENT_CATEGORIES = [
+  'restaurant', 'cafe', 'bar', 'gallery', 'museum',
+  'heritage', 'workshop', 'transport', 'hotel',
+  'shopping', 'nature', 'viewpoint', 'activity',
+] as const;
+
+export type EventCategory = typeof EVENT_CATEGORIES[number];
+
+export const CATEGORY_ICON: Record<EventCategory, string> = {
+  restaurant: '🍽',
+  cafe: '☕',
+  bar: '🍺',
+  gallery: '🖼',
+  museum: '🏛',
+  heritage: '🏰',
+  workshop: '🏺',
+  transport: '🚗',
+  hotel: '🏨',
+  shopping: '🛍',
+  nature: '🌿',
+  viewpoint: '👁',
+  activity: '⚡',
+};
+
+export const CATEGORY_LABEL: Record<EventCategory, string> = {
+  restaurant: 'Restaurant',
+  cafe: 'Café',
+  bar: 'Bar',
+  gallery: 'Gallery',
+  museum: 'Museum',
+  heritage: 'Heritage',
+  workshop: 'Workshop',
+  transport: 'Transport',
+  hotel: 'Hotel',
+  shopping: 'Shopping',
+  nature: 'Nature',
+  viewpoint: 'Viewpoint',
+  activity: 'Activity',
+};
+
 export interface EventItem {
   id?: string;
   time: string;
@@ -7,6 +47,10 @@ export interface EventItem {
   description: string; // HTML string
   tag: string;
   tagVariant: TagVariant;
+  categories?: EventCategory[];
+  phone?: string;
+  email?: string;
+  mapUrl?: string;
   docLabel?: string; // matches the label of a document in Supabase to link from this event
 }
 

@@ -1,4 +1,5 @@
 import type { EventItem as EventData } from '../data/itinerary';
+import { CATEGORY_ICON, CATEGORY_LABEL } from '../data/itinerary';
 import Tag from './Tag';
 
 interface Props {
@@ -9,25 +10,104 @@ interface Props {
   onDelete?: () => void;
 }
 
+// ── shared sub-components ────────────────────────────────────────────────────
+
+function CategoryChips({ event }: { event: EventData }) {
+  if (!event.categories?.length) return null;
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5 }}>
+      {event.categories.map(cat => (
+        <span
+          key={cat}
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 10,
+            color: '#8a8070',
+            background: 'rgba(255,255,255,.05)',
+            border: '1px solid rgba(255,255,255,.1)',
+            borderRadius: 2,
+            padding: '2px 6px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 3,
+          }}
+        >
+          <span aria-hidden="true">{CATEGORY_ICON[cat]}</span>
+          {CATEGORY_LABEL[cat]}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function ContactLinks({ event, small }: { event: EventData; small?: boolean }) {
+  const fs = small ? 10 : 10.5;
+  const items: { href: string; label: string }[] = [];
+  if (event.mapUrl)  items.push({ href: event.mapUrl,             label: '📍 Map' });
+  if (event.phone)   items.push({ href: `tel:${event.phone}`,     label: `📞 ${event.phone}` });
+  if (event.email)   items.push({ href: `mailto:${event.email}`,  label: `✉ ${event.email}` });
+  if (!items.length) return null;
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 5 }}>
+      {items.map(it => (
+        <a
+          key={it.href}
+          href={it.href}
+          target={it.href.startsWith('http') ? '_blank' : undefined}
+          rel="noopener noreferrer"
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: fs,
+            color: '#c9a84c',
+            textDecoration: 'none',
+            borderBottom: '1px dotted rgba(201,168,76,.4)',
+          }}
+        >
+          {it.label}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// ── main component ───────────────────────────────────────────────────────────
+
 export default function EventItem({ event, hideIfSettled, onOpenDoc, onEdit, onDelete }: Props) {
   const isSettled = event.tagVariant !== 'pending';
   if (hideIfSettled && isSettled) return null;
 
   const hasHtml = event.description.includes('<');
 
+  const docBtn = event.docLabel && onOpenDoc ? (
+    <button
+      type="button"
+      onClick={() => onOpenDoc(event.docLabel!)}
+      title="View document"
+      style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: 10,
+        color: '#c9a84c',
+        background: 'rgba(201,168,76,.08)',
+        border: '1px solid rgba(201,168,76,.25)',
+        borderRadius: 3,
+        padding: '3px 7px',
+        cursor: 'pointer',
+        flexShrink: 0,
+      }}
+    >
+      📄
+    </button>
+  ) : null;
+
   return (
-    /* Mobile: stacked · sm: 3-col grid */
     <article
       className="relative mb-5
         before:content-[''] before:absolute before:-left-[19px] before:top-[5px]
         before:w-[6px] before:h-[6px] before:rounded-full
         before:border-2 before:border-[rgba(201,168,76,.5)] before:bg-transparent"
     >
-      {/* Time chip — mobile */}
-      <div
-        className="inline-flex items-center mb-1 font-mono text-[10px] font-semibold w-fit sm:hidden"
-        style={{ color: '#c9a84c' }}
-      >
+      {/* Time chip — mobile only */}
+      <div className="inline-flex items-center mb-1 font-mono text-[10px] font-semibold w-fit sm:hidden" style={{ color: '#c9a84c' }}>
         {event.time}
       </div>
 
@@ -36,38 +116,21 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onEdit, onD
         <div className="font-mono text-[11.5px] font-medium tabular-nums" style={{ color: '#c9a84c' }}>{event.time}</div>
         <div>
           <h3 className="mt-0 mb-0 text-[14px] font-semibold leading-snug" style={{ color: '#f5f0e8' }}>{event.title}</h3>
+          <CategoryChips event={event} />
           {hasHtml ? (
             <div
-              className="text-[13px] mt-0.5 [&_p]:m-0 [&_a]:font-mono [&_a]:text-[10.5px] [&_a]:no-underline [&_a]:border-b [&_a]:border-dotted [&_a]:mr-2.5 [&_a:hover]:border-solid [&_strong]:font-semibold"
+              className="text-[13px] mt-1 [&_p]:m-0 [&_a]:font-mono [&_a]:text-[10.5px] [&_a]:no-underline [&_a]:border-b [&_a]:border-dotted [&_a]:mr-2.5 [&_a:hover]:border-solid [&_strong]:font-semibold"
               style={{ color: '#8a8070' }}
               dangerouslySetInnerHTML={{ __html: event.description }}
             />
           ) : (
-            <p className="text-[13px] m-0 mt-0.5 leading-snug" style={{ color: '#8a8070' }}>{event.description}</p>
+            <p className="text-[13px] m-0 mt-1 leading-snug" style={{ color: '#8a8070' }}>{event.description}</p>
           )}
+          <ContactLinks event={event} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Tag label={event.tag} variant={event.tagVariant} />
-          {event.docLabel && onOpenDoc && (
-            <button
-              type="button"
-              onClick={() => onOpenDoc(event.docLabel!)}
-              title="View document"
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                color: '#c9a84c',
-                background: 'rgba(201,168,76,.08)',
-                border: '1px solid rgba(201,168,76,.25)',
-                borderRadius: 3,
-                padding: '3px 7px',
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
-              📄
-            </button>
-          )}
+          {docBtn}
           {onEdit && (
             <button type="button" onClick={onEdit} title="Edit" style={{ background: 'none', border: 'none', color: '#8a8070', cursor: 'pointer', fontSize: 13, padding: '2px 4px', lineHeight: 1 }}>✏</button>
           )}
@@ -86,36 +149,20 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onEdit, onD
             {onDelete && <button type="button" onClick={onDelete} title="Delete" style={{ background: 'none', border: 'none', color: '#8a8070', cursor: 'pointer', fontSize: 15, padding: '0 2px', lineHeight: 1 }}>×</button>}
           </div>
         </div>
+        <CategoryChips event={event} />
         {hasHtml ? (
           <div
-            className="text-[12px] mt-0.5 [&_p]:m-0 [&_a]:font-mono [&_a]:text-[10px] [&_a]:no-underline [&_a]:border-b [&_a]:border-dotted [&_a]:mr-2 [&_strong]:font-semibold"
+            className="text-[12px] mt-1 [&_p]:m-0 [&_a]:font-mono [&_a]:text-[10px] [&_a]:no-underline [&_a]:border-b [&_a]:border-dotted [&_a]:mr-2 [&_strong]:font-semibold"
             style={{ color: '#8a8070' }}
             dangerouslySetInnerHTML={{ __html: event.description }}
           />
         ) : (
-          <p className="text-[12px] m-0 mt-0.5 leading-snug" style={{ color: '#8a8070' }}>{event.description}</p>
+          <p className="text-[12px] m-0 mt-1 leading-snug" style={{ color: '#8a8070' }}>{event.description}</p>
         )}
+        <ContactLinks event={event} small />
         <div className="mt-1.5 flex items-center gap-2">
           <Tag label={event.tag} variant={event.tagVariant} />
-          {event.docLabel && onOpenDoc && (
-            <button
-              type="button"
-              onClick={() => onOpenDoc(event.docLabel!)}
-              title="View document"
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                color: '#c9a84c',
-                background: 'rgba(201,168,76,.08)',
-                border: '1px solid rgba(201,168,76,.25)',
-                borderRadius: 3,
-                padding: '3px 7px',
-                cursor: 'pointer',
-              }}
-            >
-              📄
-            </button>
-          )}
+          {docBtn}
         </div>
       </div>
     </article>
