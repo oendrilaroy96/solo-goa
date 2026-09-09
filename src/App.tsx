@@ -1,4 +1,16 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+
+function useTheme() {
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    try { return (localStorage.getItem('goaTheme') as 'dark' | 'light') || 'dark'; } catch { return 'dark'; }
+  });
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('goaTheme', theme); } catch { /* */ }
+  }, [theme]);
+  const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+  return { theme, toggle };
+}
 import { budgetGroups, STORAGE_KEY } from './data/budget';
 import ItineraryPage from './pages/ItineraryPage';
 import BudgetPage from './pages/BudgetPage';
@@ -43,6 +55,7 @@ export default function App() {
   const [page, setPage] = useState<PageId>(getStoredPage);
   const [total, setTotal] = useState<number>(initTotal);
   const [autoOpenDoc, setAutoOpenDoc] = useState<string | null>(null);
+  const { theme, toggle } = useTheme();
   const handleTotalChange = useCallback((t: number) => setTotal(t), []);
 
   const openDoc = useCallback((label: string) => {
@@ -64,7 +77,7 @@ export default function App() {
       <a
         href="#main-content"
         className="fixed left-3 -top-20 z-[100] px-4 py-2.5 text-[13px] font-semibold no-underline focus-visible:top-0"
-        style={{ background: '#c9a84c', color: '#0d0d0d', borderRadius: 2 }}
+        style={{ background: 'var(--t-gold)', color: 'var(--t-bg)', borderRadius: 2 }}
       >
         Skip to main content
       </a>
@@ -74,17 +87,36 @@ export default function App() {
         className="hidden sm:flex flex-col fixed left-0 top-0 bottom-0 z-40"
         style={{
           width: 220,
-          background: '#0d0d0d',
-          borderRight: '1px solid rgba(255,255,255,.07)',
+          background: 'var(--t-bg)',
+          borderRight: '1px solid var(--t-w07)',
         }}
       >
         {/* Logo area */}
         <div style={{ padding: '28px 20px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <img src="/favicon.png" width={32} height={32} alt="" style={{ display: 'block' }} />
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
-              Solo Goa
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <img src="/favicon.png" width={32} height={32} alt="" style={{ display: 'block' }} />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+                Solo Goa
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={toggle}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              style={{
+                background: 'var(--t-w07)',
+                border: '1px solid var(--t-w12)',
+                borderRadius: 20,
+                padding: '4px 8px',
+                cursor: 'pointer',
+                fontSize: 14,
+                lineHeight: 1,
+                color: 'var(--t-muted)',
+              }}
+            >
+              {theme === 'dark' ? '☀' : '🌙'}
+            </button>
           </div>
           <div className="gold-line" />
         </div>
@@ -108,9 +140,9 @@ export default function App() {
                   gap: 10,
                   padding: '10px 20px',
                   paddingLeft: isActive ? 18 : 20,
-                  borderLeft: isActive ? '2px solid #c9a84c' : '2px solid transparent',
-                  background: isActive ? 'rgba(201,168,76,.08)' : 'transparent',
-                  color: isActive ? '#c9a84c' : '#8a8070',
+                  borderLeft: isActive ? '2px solid var(--t-gold)' : '2px solid transparent',
+                  background: isActive ? 'var(--t-gold-08)' : 'transparent',
+                  color: isActive ? 'var(--t-gold)' : 'var(--t-muted)',
                   fontSize: 12,
                   fontWeight: 600,
                   textTransform: 'uppercase' as const,
@@ -122,7 +154,7 @@ export default function App() {
                   transition: 'all 0.15s',
                 }}
                 onMouseEnter={e => {
-                  if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,.03)';
+                  if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--t-w03)';
                 }}
                 onMouseLeave={e => {
                   if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent';
@@ -138,10 +170,10 @@ export default function App() {
         {/* Total at bottom */}
         <div style={{ padding: '16px 20px 28px' }}>
           <div className="gold-line" style={{ marginBottom: 16 }} />
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
             Estimated total
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 16, color: '#c9a84c', fontWeight: 600 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 16, color: 'var(--t-gold)', fontWeight: 600 }}>
             {fmt(total)}
           </div>
         </div>
@@ -182,9 +214,9 @@ export default function App() {
             style={{
               marginTop: 64,
               paddingTop: 24,
-              borderTop: '1px solid rgba(255,255,255,.07)',
+              borderTop: '1px solid var(--t-w07)',
               fontSize: 12,
-              color: '#8a8070',
+              color: 'var(--t-muted)',
               textAlign: 'center',
               lineHeight: 1.6,
             }}
@@ -194,12 +226,34 @@ export default function App() {
         </div>
       </main>
 
+      {/* ── MOBILE THEME TOGGLE ── */}
+      <button
+        type="button"
+        onClick={toggle}
+        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        className="sm:hidden fixed z-40"
+        style={{
+          bottom: 68,
+          right: 16,
+          background: 'var(--t-card)',
+          border: '1px solid var(--t-w12)',
+          borderRadius: 20,
+          padding: '6px 10px',
+          cursor: 'pointer',
+          fontSize: 16,
+          lineHeight: 1,
+          boxShadow: '0 2px 8px rgba(0,0,0,.3)',
+        }}
+      >
+        {theme === 'dark' ? '☀' : '🌙'}
+      </button>
+
       {/* ── MOBILE BOTTOM NAV ── */}
       <nav
         className="sm:hidden fixed bottom-0 left-0 right-0 z-30 flex overflow-x-auto"
         style={{
-          background: '#0d0d0d',
-          borderTop: '1px solid rgba(255,255,255,.07)',
+          background: 'var(--t-bg)',
+          borderTop: '1px solid var(--t-w07)',
           scrollbarWidth: 'none',
         } as React.CSSProperties}
         role="tablist"
@@ -217,7 +271,7 @@ export default function App() {
               className="flex-1 min-w-[50px] flex flex-col items-center justify-center gap-0.5 py-2.5 cursor-pointer shrink-0 border-0 transition-all"
               style={{
                 background: 'transparent',
-                borderTop: isActive ? '2px solid #c9a84c' : '2px solid transparent',
+                borderTop: isActive ? '2px solid var(--t-gold)' : '2px solid transparent',
               }}
             >
               <span className="text-[15px] leading-none">{p.icon}</span>
@@ -225,7 +279,7 @@ export default function App() {
                 className="text-[8px] font-bold uppercase tracking-wide"
                 style={{
                   fontFamily: 'var(--font-mono)',
-                  color: isActive ? '#c9a84c' : '#8a8070',
+                  color: isActive ? 'var(--t-gold)' : 'var(--t-muted)',
                 }}
               >
                 {p.short}

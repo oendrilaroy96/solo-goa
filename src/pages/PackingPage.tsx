@@ -81,7 +81,7 @@ function OutfitsTab() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <p className="mt-0 mb-2 text-[13px] leading-relaxed" style={{ color: '#8a8070' }}>
+      <p className="mt-0 mb-2 text-[13px] leading-relaxed" style={{ color: 'var(--t-muted)' }}>
         Upload one outfit photo per day — syncs across your devices.
       </p>
       {TRIP_DAYS.map(({ day, label }) => {
@@ -108,7 +108,7 @@ function OutfitsTab() {
                   background: 'linear-gradient(to bottom, rgba(0,0,0,.7), transparent)',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#c9a84c', fontWeight: 600 }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t-gold)', fontWeight: 600 }}>
                     {label}
                   </span>
                   <div style={{ display: 'flex', gap: 6 }}>
@@ -122,8 +122,8 @@ function OutfitsTab() {
                       />
                       <span style={{
                         fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600,
-                        color: '#c9a84c', background: 'rgba(201,168,76,.15)',
-                        border: '1px solid rgba(201,168,76,.3)',
+                        color: 'var(--t-gold)', background: 'rgba(201,168,76,.15)',
+                        border: '1px solid var(--t-gold-30)',
                         borderRadius: 3, padding: '4px 10px', cursor: 'pointer',
                       }}>
                         Change
@@ -134,8 +134,8 @@ function OutfitsTab() {
                       onClick={() => handleRemove(day)}
                       style={{
                         fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600,
-                        color: '#8a8070', background: 'rgba(0,0,0,.4)',
-                        border: '1px solid rgba(255,255,255,.15)',
+                        color: 'var(--t-muted)', background: 'rgba(0,0,0,.4)',
+                        border: '1px solid var(--t-w15)',
                         borderRadius: 3, padding: '4px 10px', cursor: 'pointer',
                       }}
                     >
@@ -159,13 +159,13 @@ function OutfitsTab() {
                   padding: '14px 16px',
                   opacity: isUploading ? 0.5 : 1,
                 }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#8a8070', fontWeight: 600 }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t-muted)', fontWeight: 600 }}>
                     {label}
                   </span>
                   <span style={{
                     fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600,
-                    color: '#c9a84c', background: 'rgba(201,168,76,.08)',
-                    border: '1px solid rgba(201,168,76,.25)',
+                    color: 'var(--t-gold)', background: 'var(--t-gold-08)',
+                    border: '1px solid var(--t-gold-25)',
                     borderRadius: 3, padding: '4px 12px',
                   }}>
                     {isUploading ? 'Uploading…' : '+ Photo'}
@@ -186,9 +186,9 @@ const TAB_STYLE = (active: boolean) => ({
   padding: '8px 18px 10px',
   background: 'transparent',
   border: 0,
-  borderBottom: active ? '2px solid #c9a84c' : '2px solid transparent',
+  borderBottom: active ? '2px solid var(--t-gold)' : '2px solid transparent',
   marginBottom: -1,
-  color: active ? '#c9a84c' : '#8a8070',
+  color: active ? 'var(--t-gold)' : 'var(--t-muted)',
   fontFamily: 'var(--font-mono)',
   fontSize: 11,
   fontWeight: 600,
@@ -238,14 +238,14 @@ export default function PackingPage() {
       <div className="gold-line mb-8" />
       <h2
         className="m-0 mb-1 text-[22px]"
-        style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: '#f5f0e8' }}
+        style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--t-fg)' }}
       >
         Packing
       </h2>
 
       {/* Tabs */}
       <div
-        style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,.07)', marginBottom: 32, marginTop: 16 }}
+        style={{ display: 'flex', borderBottom: '1px solid var(--t-w07)', marginBottom: 32, marginTop: 16 }}
         role="tablist"
       >
         <button type="button" role="tab" aria-selected={tab === 'checklist'} onClick={() => setTab('checklist')} style={TAB_STYLE(tab === 'checklist')}>
@@ -263,22 +263,22 @@ export default function PackingPage() {
           <div className="flex items-baseline justify-between gap-2.5 mb-1">
             <span
               className="font-mono text-[11px] whitespace-nowrap"
-              style={{ color: '#8a8070' }}
+              style={{ color: 'var(--t-muted)' }}
               aria-live="polite"
             >
               {done} / {total} packed
             </span>
           </div>
-          <p className="mt-1 mb-6 text-[13px] leading-relaxed" style={{ color: '#8a8070' }}>
+          <p className="mt-1 mb-6 text-[13px] leading-relaxed" style={{ color: 'var(--t-muted)' }}>
             Built around this trip — the pottery workshop, the churches, the solo travel. Ticks sync across your devices.
           </p>
 
           {/* Progress bar */}
-          <div className="mb-8 overflow-hidden" style={{ height: 1, background: 'rgba(255,255,255,.08)' }}>
+          <div className="mb-8 overflow-hidden" style={{ height: 1, background: 'var(--t-w08)' }}>
             <div
               style={{
                 height: '100%',
-                background: '#c9a84c',
+                background: 'var(--t-gold)',
                 width: total ? `${(done / total) * 100}%` : '0%',
                 transition: 'width .25s ease',
               }}
@@ -300,7 +300,7 @@ export default function PackingPage() {
                   {section.title && (
                     <h3
                       className="font-mono font-semibold uppercase tracking-[.1em] text-[10px] mt-8 mb-3 first:mt-0"
-                      style={{ color: '#c9a84c' }}
+                      style={{ color: 'var(--t-gold)' }}
                     >
                       {section.title}
                     </h3>
@@ -313,9 +313,9 @@ export default function PackingPage() {
                         key={item.id}
                         className="flex gap-3 items-start px-0 py-2.5 text-[13px] cursor-pointer transition-opacity"
                         style={{
-                          borderBottom: '1px solid rgba(255,255,255,.05)',
+                          borderBottom: '1px solid var(--t-w05)',
                           opacity: isDone ? 0.4 : 1,
-                          color: '#f5f0e8',
+                          color: 'var(--t-fg)',
                         }}
                       >
                         <input
@@ -336,12 +336,12 @@ export default function PackingPage() {
           <div
             className="mt-8 p-4 text-[12.5px]"
             style={{
-              borderLeft: '2px solid rgba(201,168,76,.3)',
-              background: 'rgba(201,168,76,.04)',
-              color: '#f5f0e8',
+              borderLeft: '2px solid var(--t-gold-30)',
+              background: 'var(--t-gold-04)',
+              color: 'var(--t-fg)',
             }}
           >
-            <strong style={{ color: '#c9a84c' }}>Weather note:</strong> Forecast shows rain most days — pack to keep electronics and documents dry rather than relying on the sun.
+            <strong style={{ color: 'var(--t-gold)' }}>Weather note:</strong> Forecast shows rain most days — pack to keep electronics and documents dry rather than relying on the sun.
           </div>
         </>
       )}

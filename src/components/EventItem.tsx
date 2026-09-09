@@ -22,9 +22,9 @@ function CategoryChips({ event }: { event: EventData }) {
           style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 10,
-            color: '#8a8070',
-            background: 'rgba(255,255,255,.05)',
-            border: '1px solid rgba(255,255,255,.1)',
+            color: 'var(--t-muted)',
+            background: 'var(--t-w05)',
+            border: '1px solid var(--t-w10)',
             borderRadius: 2,
             padding: '2px 6px',
             display: 'inline-flex',
@@ -58,9 +58,9 @@ function ContactLinks({ event, small }: { event: EventData; small?: boolean }) {
           style={{
             fontFamily: 'var(--font-mono)',
             fontSize: fs,
-            color: '#c9a84c',
+            color: 'var(--t-gold)',
             textDecoration: 'none',
-            borderBottom: '1px dotted rgba(201,168,76,.4)',
+            borderBottom: '1px dotted var(--t-gold-40)',
           }}
         >
           {it.label}
@@ -86,9 +86,9 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onEdit, onD
       style={{
         fontFamily: 'var(--font-mono)',
         fontSize: 10,
-        color: '#c9a84c',
-        background: 'rgba(201,168,76,.08)',
-        border: '1px solid rgba(201,168,76,.25)',
+        color: 'var(--t-gold)',
+        background: 'var(--t-gold-08)',
+        border: '1px solid var(--t-gold-25)',
         borderRadius: 3,
         padding: '3px 7px',
         cursor: 'pointer',
@@ -104,27 +104,27 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onEdit, onD
       className="relative mb-5
         before:content-[''] before:absolute before:-left-[19px] before:top-[5px]
         before:w-[6px] before:h-[6px] before:rounded-full
-        before:border-2 before:border-[rgba(201,168,76,.5)] before:bg-transparent"
+        before:border-2 before:border-[var(--t-gold-50)] before:bg-transparent"
     >
       {/* Time chip — mobile only */}
-      <div className="inline-flex items-center mb-1 font-mono text-[10px] font-semibold w-fit sm:hidden" style={{ color: '#c9a84c' }}>
+      <div className="inline-flex items-center mb-1 font-mono text-[10px] font-semibold w-fit sm:hidden" style={{ color: 'var(--t-gold)' }}>
         {event.time}
       </div>
 
       {/* Desktop: 3-col layout */}
       <div className="hidden sm:grid sm:grid-cols-[100px_1fr_auto] sm:gap-4 sm:items-baseline">
-        <div className="font-mono text-[11.5px] font-medium tabular-nums" style={{ color: '#c9a84c' }}>{event.time}</div>
+        <div className="font-mono text-[11.5px] font-medium tabular-nums" style={{ color: 'var(--t-gold)' }}>{event.time}</div>
         <div>
-          <h3 className="mt-0 mb-0 text-[14px] font-semibold leading-snug" style={{ color: '#f5f0e8' }}>{event.title}</h3>
+          <h3 className="mt-0 mb-0 text-[14px] font-semibold leading-snug" style={{ color: 'var(--t-fg)' }}>{event.title}</h3>
           <CategoryChips event={event} />
           {hasHtml ? (
             <div
               className="text-[13px] mt-1 [&_p]:m-0 [&_a]:font-mono [&_a]:text-[10.5px] [&_a]:no-underline [&_a]:border-b [&_a]:border-dotted [&_a]:mr-2.5 [&_a:hover]:border-solid [&_strong]:font-semibold"
-              style={{ color: '#8a8070' }}
+              style={{ color: 'var(--t-muted)' }}
               dangerouslySetInnerHTML={{ __html: event.description }}
             />
           ) : (
-            <p className="text-[13px] m-0 mt-1 leading-snug" style={{ color: '#8a8070' }}>{event.description}</p>
+            <p className="text-[13px] m-0 mt-1 leading-snug" style={{ color: 'var(--t-muted)' }}>{event.description}</p>
           )}
           <ContactLinks event={event} />
         </div>
@@ -132,10 +132,10 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onEdit, onD
           <Tag label={event.tag} variant={event.tagVariant} />
           {docBtn}
           {onEdit && (
-            <button type="button" onClick={onEdit} title="Edit" style={{ background: 'none', border: 'none', color: '#8a8070', cursor: 'pointer', fontSize: 13, padding: '2px 4px', lineHeight: 1 }}>✏</button>
+            <button type="button" onClick={onEdit} title="Edit" style={{ background: 'none', border: 'none', color: 'var(--t-muted)', cursor: 'pointer', fontSize: 13, padding: '2px 4px', lineHeight: 1 }}>✏</button>
           )}
           {onDelete && (
-            <button type="button" onClick={onDelete} title="Delete" style={{ background: 'none', border: 'none', color: '#8a8070', cursor: 'pointer', fontSize: 15, padding: '2px 4px', lineHeight: 1 }}>×</button>
+            <button type="button" onClick={onDelete} title="Delete" style={{ background: 'none', border: 'none', color: 'var(--t-muted)', cursor: 'pointer', fontSize: 15, padding: '2px 4px', lineHeight: 1 }}>×</button>
           )}
         </div>
       </div>
@@ -143,21 +143,21 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onEdit, onD
       {/* Mobile: stacked layout */}
       <div className="sm:hidden">
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-          <h3 className="mt-0 mb-0 text-[13.5px] font-semibold leading-snug" style={{ color: '#f5f0e8' }}>{event.title}</h3>
+          <h3 className="mt-0 mb-0 text-[13.5px] font-semibold leading-snug" style={{ color: 'var(--t-fg)' }}>{event.title}</h3>
           <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-            {onEdit && <button type="button" onClick={onEdit} title="Edit" style={{ background: 'none', border: 'none', color: '#8a8070', cursor: 'pointer', fontSize: 13, padding: '0 2px', lineHeight: 1 }}>✏</button>}
-            {onDelete && <button type="button" onClick={onDelete} title="Delete" style={{ background: 'none', border: 'none', color: '#8a8070', cursor: 'pointer', fontSize: 15, padding: '0 2px', lineHeight: 1 }}>×</button>}
+            {onEdit && <button type="button" onClick={onEdit} title="Edit" style={{ background: 'none', border: 'none', color: 'var(--t-muted)', cursor: 'pointer', fontSize: 13, padding: '0 2px', lineHeight: 1 }}>✏</button>}
+            {onDelete && <button type="button" onClick={onDelete} title="Delete" style={{ background: 'none', border: 'none', color: 'var(--t-muted)', cursor: 'pointer', fontSize: 15, padding: '0 2px', lineHeight: 1 }}>×</button>}
           </div>
         </div>
         <CategoryChips event={event} />
         {hasHtml ? (
           <div
             className="text-[12px] mt-1 [&_p]:m-0 [&_a]:font-mono [&_a]:text-[10px] [&_a]:no-underline [&_a]:border-b [&_a]:border-dotted [&_a]:mr-2 [&_strong]:font-semibold"
-            style={{ color: '#8a8070' }}
+            style={{ color: 'var(--t-muted)' }}
             dangerouslySetInnerHTML={{ __html: event.description }}
           />
         ) : (
-          <p className="text-[12px] m-0 mt-1 leading-snug" style={{ color: '#8a8070' }}>{event.description}</p>
+          <p className="text-[12px] m-0 mt-1 leading-snug" style={{ color: 'var(--t-muted)' }}>{event.description}</p>
         )}
         <ContactLinks event={event} small />
         <div className="mt-1.5 flex items-center gap-2">

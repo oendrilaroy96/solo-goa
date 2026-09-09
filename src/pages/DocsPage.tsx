@@ -109,11 +109,11 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
         <div>
           <h2
             className="m-0 mb-1 text-[22px]"
-            style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: '#f5f0e8' }}
+            style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--t-fg)' }}
           >
             Documents
           </h2>
-          <p className="mt-1 mb-0 text-[13px] leading-relaxed" style={{ color: '#8a8070' }}>
+          <p className="mt-1 mb-0 text-[13px] leading-relaxed" style={{ color: 'var(--t-muted)' }}>
             Tickets, confirmations &amp; receipts
           </p>
         </div>
@@ -126,9 +126,9 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
             fontWeight: 600,
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
-            color: '#c9a84c',
-            background: 'rgba(201,168,76,.1)',
-            border: '1px solid rgba(201,168,76,.3)',
+            color: 'var(--t-gold)',
+            background: 'var(--t-gold-10)',
+            border: '1px solid var(--t-gold-30)',
             borderRadius: 3,
             padding: '7px 14px',
             cursor: 'pointer',
@@ -147,7 +147,7 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
           style={{ padding: '20px', marginBottom: 32, marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               Label *
             </label>
             <input
@@ -156,11 +156,11 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
               onChange={e => setLabel(e.target.value)}
               placeholder="e.g. IndiGo 6E 634 — Kolkata → Goa"
               style={{
-                background: '#0d0d0d',
-                border: '1px solid rgba(255,255,255,.12)',
+                background: 'var(--t-bg)',
+                border: '1px solid var(--t-w12)',
                 borderRadius: 2,
                 padding: '8px 12px',
-                color: '#f5f0e8',
+                color: 'var(--t-fg)',
                 fontSize: 13,
                 outline: 'none',
               }}
@@ -168,7 +168,7 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               Sublabel
             </label>
             <input
@@ -177,11 +177,11 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
               onChange={e => setSublabel(e.target.value)}
               placeholder="e.g. 14 September · Ticket"
               style={{
-                background: '#0d0d0d',
-                border: '1px solid rgba(255,255,255,.12)',
+                background: 'var(--t-bg)',
+                border: '1px solid var(--t-w12)',
                 borderRadius: 2,
                 padding: '8px 12px',
-                color: '#f5f0e8',
+                color: 'var(--t-fg)',
                 fontSize: 13,
                 outline: 'none',
               }}
@@ -190,18 +190,18 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 Category
               </label>
               <select
                 value={category}
                 onChange={e => setCategory(e.target.value as DocCategory)}
                 style={{
-                  background: '#0d0d0d',
-                  border: '1px solid rgba(255,255,255,.12)',
+                  background: 'var(--t-bg)',
+                  border: '1px solid var(--t-w12)',
                   borderRadius: 2,
                   padding: '8px 12px',
-                  color: '#f5f0e8',
+                  color: 'var(--t-fg)',
                   fontSize: 13,
                   outline: 'none',
                 }}
@@ -213,7 +213,7 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 File *
               </label>
               <input
@@ -221,11 +221,11 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png,.webp"
                 style={{
-                  background: '#0d0d0d',
-                  border: '1px solid rgba(255,255,255,.12)',
+                  background: 'var(--t-bg)',
+                  border: '1px solid var(--t-w12)',
                   borderRadius: 2,
                   padding: '6px 12px',
-                  color: '#8a8070',
+                  color: 'var(--t-muted)',
                   fontSize: 12,
                   outline: 'none',
                 }}
@@ -247,8 +247,8 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.08em',
-              color: uploading ? '#8a8070' : '#0d0d0d',
-              background: uploading ? 'rgba(201,168,76,.2)' : '#c9a84c',
+              color: uploading ? 'var(--t-muted)' : 'var(--t-bg)',
+              background: uploading ? 'var(--t-gold-20)' : 'var(--t-gold)',
               border: 'none',
               borderRadius: 3,
               padding: '10px 20px',
@@ -262,11 +262,11 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
       )}
 
       {docs.length === 0 && !showForm ? (
-        <div style={{ textAlign: 'center', padding: '64px 24px', color: '#8a8070', marginTop: 24 }}>
+        <div style={{ textAlign: 'center', padding: '64px 24px', color: 'var(--t-muted)', marginTop: 24 }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>📁</div>
-          <p style={{ fontSize: 14, marginBottom: 8, color: '#f5f0e8' }}>No documents yet</p>
+          <p style={{ fontSize: 14, marginBottom: 8, color: 'var(--t-fg)' }}>No documents yet</p>
           <p style={{ fontSize: 13, maxWidth: 320, margin: '0 auto', lineHeight: 1.6 }}>
-            Tap <strong style={{ color: '#c9a84c' }}>+ Add</strong> to upload a PDF or image — it'll sync to all your devices.
+            Tap <strong style={{ color: 'var(--t-gold)' }}>+ Add</strong> to upload a PDF or image — it'll sync to all your devices.
           </p>
         </div>
       ) : (
@@ -277,7 +277,7 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
                 style={{
                   fontFamily: 'var(--font-mono)',
                   fontSize: 10,
-                  color: '#c9a84c',
+                  color: 'var(--t-gold)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.12em',
                   fontWeight: 600,
@@ -309,7 +309,7 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
                         style={{
                           fontSize: 15,
                           fontWeight: 600,
-                          color: '#f5f0e8',
+                          color: 'var(--t-fg)',
                           marginBottom: 3,
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
@@ -318,7 +318,7 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
                       >
                         {doc.label}
                       </div>
-                      <div style={{ fontSize: 12.5, color: '#8a8070' }}>{doc.sublabel}</div>
+                      <div style={{ fontSize: 12.5, color: 'var(--t-muted)' }}>{doc.sublabel}</div>
                     </div>
 
                     <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -332,9 +332,9 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
                           fontWeight: 600,
                           textTransform: 'uppercase',
                           letterSpacing: '0.08em',
-                          color: '#c9a84c',
-                          background: 'rgba(201,168,76,.1)',
-                          border: '1px solid rgba(201,168,76,.3)',
+                          color: 'var(--t-gold)',
+                          background: 'var(--t-gold-10)',
+                          border: '1px solid var(--t-gold-30)',
                           borderRadius: 3,
                           padding: '5px 12px',
                           cursor: 'pointer',
@@ -352,9 +352,9 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
                           fontWeight: 600,
                           textTransform: 'uppercase',
                           letterSpacing: '0.08em',
-                          color: '#8a8070',
-                          background: 'rgba(255,255,255,.04)',
-                          border: '1px solid rgba(255,255,255,.1)',
+                          color: 'var(--t-muted)',
+                          background: 'var(--t-w04)',
+                          border: '1px solid var(--t-w10)',
                           borderRadius: 3,
                           padding: '5px 12px',
                           textDecoration: 'none',
@@ -372,9 +372,9 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
                           fontFamily: 'var(--font-mono)',
                           fontSize: 11,
                           fontWeight: 600,
-                          color: '#8a8070',
-                          background: 'rgba(255,255,255,.04)',
-                          border: '1px solid rgba(255,255,255,.1)',
+                          color: 'var(--t-muted)',
+                          background: 'var(--t-w04)',
+                          border: '1px solid var(--t-w10)',
                           borderRadius: 3,
                           padding: '5px 10px',
                           cursor: 'pointer',
@@ -412,7 +412,7 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '16px 20px',
-              borderBottom: '1px solid rgba(255,255,255,.08)',
+              borderBottom: '1px solid var(--t-w08)',
               flexShrink: 0,
             }}
           >
@@ -420,7 +420,7 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
               style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: 13,
-                color: '#c9a84c',
+                color: 'var(--t-gold)',
                 fontWeight: 600,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -437,7 +437,7 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#c9a84c',
+                color: 'var(--t-gold)',
                 fontSize: 24,
                 lineHeight: 1,
                 cursor: 'pointer',

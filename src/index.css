@@ -8,16 +8,13 @@
   --color-muted:         #8a8070;
   --color-line:          rgba(255,255,255,.07);
 
-  --color-azulejo:       #c9a84c;   /* gold */
+  --color-azulejo:       #c9a84c;
   --color-azulejo-soft:  rgba(201,168,76,.10);
-
-  --color-laterite:      #e8c96a;   /* gold light */
+  --color-laterite:      #e8c96a;
   --color-laterite-soft: rgba(232,201,106,.08);
-
-  --color-mustard:       #a07840;   /* warm bronze */
+  --color-mustard:       #a07840;
   --color-mustard-soft:  rgba(160,120,64,.10);
-
-  --color-monsoon:       #6a8a6a;   /* muted sage */
+  --color-monsoon:       #6a8a6a;
   --color-monsoon-soft:  rgba(106,138,106,.10);
 
   --font-sans:    "Work Sans", ui-sans-serif, system-ui, sans-serif;
@@ -26,6 +23,80 @@
   --font-script:  "Fraunces", Georgia, serif;
 }
 
+/* ── Theme tokens ── */
+:root {
+  /* Core surfaces */
+  --t-bg:   #0d0d0d;
+  --t-card: #141414;
+  --t-fg:   #f5f0e8;
+  --t-muted: #8a8070;
+  --t-gold:  #c9a84c;
+
+  /* Gold tints */
+  --t-gold-04: rgba(201,168,76,.04);
+  --t-gold-06: rgba(201,168,76,.06);
+  --t-gold-08: rgba(201,168,76,.08);
+  --t-gold-10: rgba(201,168,76,.10);
+  --t-gold-12: rgba(201,168,76,.12);
+  --t-gold-20: rgba(201,168,76,.2);
+  --t-gold-25: rgba(201,168,76,.25);
+  --t-gold-30: rgba(201,168,76,.3);
+  --t-gold-40: rgba(201,168,76,.4);
+  --t-gold-50: rgba(201,168,76,.5);
+  --t-gold-60: rgba(201,168,76,.6);
+  --t-gold-70: rgba(201,168,76,.7);
+  --t-gold-80: rgba(201,168,76,.8);
+
+  /* White-based fills & borders (dark bg) */
+  --t-w03: rgba(255,255,255,.03);
+  --t-w04: rgba(255,255,255,.04);
+  --t-w05: rgba(255,255,255,.05);
+  --t-w06: rgba(255,255,255,.06);
+  --t-w07: rgba(255,255,255,.07);
+  --t-w08: rgba(255,255,255,.08);
+  --t-w10: rgba(255,255,255,.1);
+  --t-w12: rgba(255,255,255,.12);
+  --t-w15: rgba(255,255,255,.15);
+
+  /* Muted rgba */
+  --t-muted-35: rgba(138,128,112,.35);
+  --t-muted-60: rgba(138,128,112,.6);
+}
+
+[data-theme="light"] {
+  --t-bg:    #faf8f4;
+  --t-card:  #eeeae2;
+  --t-fg:    #1a1510;
+  --t-muted: #6b5f4f;
+  --t-gold:  #9a6e18;
+
+  --t-gold-04: rgba(154,110,24,.04);
+  --t-gold-06: rgba(154,110,24,.06);
+  --t-gold-08: rgba(154,110,24,.08);
+  --t-gold-10: rgba(154,110,24,.10);
+  --t-gold-12: rgba(154,110,24,.12);
+  --t-gold-20: rgba(154,110,24,.2);
+  --t-gold-25: rgba(154,110,24,.25);
+  --t-gold-30: rgba(154,110,24,.3);
+  --t-gold-40: rgba(154,110,24,.4);
+  --t-gold-50: rgba(154,110,24,.5);
+  --t-gold-60: rgba(154,110,24,.6);
+  --t-gold-70: rgba(154,110,24,.7);
+  --t-gold-80: rgba(154,110,24,.8);
+
+  --t-w03: rgba(0,0,0,.03);
+  --t-w04: rgba(0,0,0,.04);
+  --t-w05: rgba(0,0,0,.05);
+  --t-w06: rgba(0,0,0,.06);
+  --t-w07: rgba(0,0,0,.08);
+  --t-w08: rgba(0,0,0,.09);
+  --t-w10: rgba(0,0,0,.12);
+  --t-w12: rgba(0,0,0,.15);
+  --t-w15: rgba(0,0,0,.18);
+
+  --t-muted-35: rgba(107,95,79,.35);
+  --t-muted-60: rgba(107,95,79,.6);
+}
 
 /* ── Base ── */
 *, *::before, *::after { box-sizing: border-box; }
@@ -34,40 +105,51 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  background: #0d0d0d;
-  color: #f5f0e8;
+  background: var(--t-bg);
+  color: var(--t-fg);
   font-family: var(--font-sans);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.2s, color 0.2s;
 }
 
 /* Gold divider line utility */
 .gold-line {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201,168,76,.4), transparent);
+  background: linear-gradient(90deg, transparent, var(--t-gold-40), transparent);
 }
 
 /* Subtle card glow on hover */
 .luxury-card {
-  background: #141414;
-  border: 1px solid rgba(255,255,255,.07);
+  background: var(--t-card);
+  border: 1px solid var(--t-w07);
   border-radius: 2px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .luxury-card:hover {
-  border-color: rgba(201,168,76,.2);
-  box-shadow: 0 0 40px rgba(201,168,76,.04);
+  border-color: var(--t-gold-20);
+  box-shadow: 0 0 40px var(--t-gold-04);
 }
 
 /* Global accessible focus ring */
 :focus-visible {
-  outline: 2px solid rgba(201,168,76,.6);
+  outline: 2px solid var(--t-gold-60);
   outline-offset: 3px;
   border-radius: 2px;
 }
 
 /* Checkbox */
-input[type="checkbox"] { accent-color: #c9a84c; }
+input[type="checkbox"] { accent-color: var(--t-gold); }
+
+/* Form inputs default */
+input, textarea, select {
+  color-scheme: dark;
+}
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  color-scheme: light;
+}
 
 /* Native details/summary toggle icon */
 details > summary { list-style: none; }

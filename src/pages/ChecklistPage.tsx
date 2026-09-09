@@ -52,31 +52,31 @@ export default function ChecklistPage() {
       <div className="flex items-baseline justify-between gap-2.5 mb-1">
         <h2
           className="m-0 text-[22px]"
-          style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: '#f5f0e8' }}
+          style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--t-fg)' }}
         >
           Before you go
         </h2>
         <span
           className="font-mono text-[11px] whitespace-nowrap"
-          style={{ color: '#8a8070' }}
+          style={{ color: 'var(--t-muted)' }}
           aria-live="polite"
         >
           {done} / {total}
         </span>
       </div>
-      <p className="mt-1 mb-6 text-[13px] leading-relaxed" style={{ color: '#8a8070' }}>
+      <p className="mt-1 mb-6 text-[13px] leading-relaxed" style={{ color: 'var(--t-muted)' }}>
         A short safety and logistics check — ticks sync across your devices.
       </p>
 
       {/* Progress bar */}
       <div
         className="mb-8 overflow-hidden"
-        style={{ height: 1, background: 'rgba(255,255,255,.08)' }}
+        style={{ height: 1, background: 'var(--t-w08)' }}
       >
         <div
           style={{
             height: '100%',
-            background: '#c9a84c',
+            background: 'var(--t-gold)',
             width: total ? `${(done / total) * 100}%` : '0%',
             transition: 'width .25s ease',
           }}
@@ -95,9 +95,9 @@ export default function ChecklistPage() {
               key={item.id}
               className="flex gap-3 items-start px-0 py-2.5 text-[13px] cursor-pointer transition-opacity"
               style={{
-                borderBottom: '1px solid rgba(255,255,255,.05)',
+                borderBottom: '1px solid var(--t-w05)',
                 opacity: isDone ? 0.4 : 1,
-                color: '#f5f0e8',
+                color: 'var(--t-fg)',
               }}
             >
               <input
@@ -115,12 +115,12 @@ export default function ChecklistPage() {
       <div
         className="mt-8 p-4 text-[12.5px]"
         style={{
-          borderLeft: '2px solid rgba(201,168,76,.3)',
-          background: 'rgba(201,168,76,.04)',
-          color: '#f5f0e8',
+          borderLeft: '2px solid var(--t-gold-30)',
+          background: 'var(--t-gold-04)',
+          color: 'var(--t-fg)',
         }}
       >
-        <strong style={{ color: '#c9a84c' }}>September note:</strong> Build in rain buffers and keep an umbrella or light raincoat accessible rather than packed inside.
+        <strong style={{ color: 'var(--t-gold)' }}>September note:</strong> Build in rain buffers and keep an umbrella or light raincoat accessible rather than packed inside.
       </div>
     </section>
   );

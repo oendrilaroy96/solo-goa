@@ -14,8 +14,8 @@ interface Props {
 
 export default function StayCard({ status, name, details, links, isAlternative, children }: Props) {
   const accentBorder = isAlternative
-    ? '3px solid rgba(255,255,255,.1)'
-    : '3px solid rgba(201,168,76,.4)';
+    ? '3px solid var(--t-w10)'
+    : '3px solid var(--t-gold-40)';
 
   return (
     <div
@@ -26,7 +26,7 @@ export default function StayCard({ status, name, details, links, isAlternative, 
         <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
           <small
             className="font-mono font-bold uppercase tracking-[.08em]"
-            style={{ fontSize: 9.5, color: isAlternative ? '#8a8070' : '#c9a84c', letterSpacing: '0.1em' }}
+            style={{ fontSize: 9.5, color: isAlternative ? 'var(--t-muted)' : 'var(--t-gold)', letterSpacing: '0.1em' }}
           >
             {status}
           </small>
@@ -40,8 +40,8 @@ export default function StayCard({ status, name, details, links, isAlternative, 
                   rel="noopener"
                   className="font-mono text-[10.5px] no-underline hover:border-solid"
                   style={{
-                    color: '#c9a84c',
-                    borderBottom: '1px dotted rgba(201,168,76,.5)',
+                    color: 'var(--t-gold)',
+                    borderBottom: '1px dotted var(--t-gold-50)',
                   }}
                 >
                   {l.label}
@@ -52,13 +52,13 @@ export default function StayCard({ status, name, details, links, isAlternative, 
         </div>
         <strong
           className="block text-[14.5px] font-semibold leading-snug"
-          style={{ color: '#f5f0e8' }}
+          style={{ color: 'var(--t-fg)' }}
         >
           {name}
         </strong>
         <span
           className="block mt-1 leading-relaxed"
-          style={{ fontSize: 12.5, color: '#8a8070' }}
+          style={{ fontSize: 12.5, color: 'var(--t-muted)' }}
         >
           {details}
         </span>

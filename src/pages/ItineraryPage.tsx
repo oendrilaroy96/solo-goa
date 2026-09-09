@@ -78,11 +78,11 @@ const BLANK_DAY   = (): DayDraft   => ({ day: '', weekday: '', subtitle: '', wea
 // ─── styles ───────────────────────────────────────────────────────────────────
 
 const INPUT = (extra?: React.CSSProperties): React.CSSProperties => ({
-  background: '#0d0d0d',
-  border: '1px solid rgba(255,255,255,.12)',
+  background: 'var(--t-bg)',
+  border: '1px solid var(--t-w12)',
   borderRadius: 2,
   padding: '8px 12px',
-  color: '#f5f0e8',
+  color: 'var(--t-fg)',
   fontSize: 13,
   outline: 'none',
   width: '100%',
@@ -92,21 +92,21 @@ const INPUT = (extra?: React.CSSProperties): React.CSSProperties => ({
 
 const LBL: React.CSSProperties = {
   fontFamily: 'var(--font-mono)', fontSize: 10,
-  color: '#8a8070', textTransform: 'uppercase', letterSpacing: '0.08em',
+  color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.08em',
 };
 
 const BTN_CANCEL: React.CSSProperties = {
   fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
   textTransform: 'uppercase', letterSpacing: '0.08em',
-  color: '#8a8070', background: 'transparent',
-  border: '1px solid rgba(255,255,255,.1)', borderRadius: 3,
+  color: 'var(--t-muted)', background: 'transparent',
+  border: '1px solid var(--t-w10)', borderRadius: 3,
   padding: '8px 16px', cursor: 'pointer',
 };
 
 const BTN_SAVE: React.CSSProperties = {
   fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
   textTransform: 'uppercase', letterSpacing: '0.08em',
-  color: '#0d0d0d', background: '#c9a84c',
+  color: 'var(--t-bg)', background: 'var(--t-gold)',
   border: 'none', borderRadius: 3,
   padding: '8px 20px', cursor: 'pointer',
 };
@@ -265,7 +265,7 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
 
   if (loading) {
     return (
-      <div style={{ color: '#8a8070', fontFamily: 'var(--font-mono)', fontSize: 12, padding: 40 }}>
+      <div style={{ color: 'var(--t-muted)', fontFamily: 'var(--font-mono)', fontSize: 12, padding: 40 }}>
         Loading itinerary…
       </div>
     );
@@ -276,7 +276,7 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
       {/* Day selector tabs */}
       <div
         className="flex gap-0 mb-8 overflow-x-auto pb-0 items-end"
-        style={{ scrollbarWidth: 'none', borderBottom: '1px solid rgba(255,255,255,.07)' }}
+        style={{ scrollbarWidth: 'none', borderBottom: '1px solid var(--t-w07)' }}
         role="tablist"
         aria-label="Select a day"
       >
@@ -295,19 +295,19 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
                   padding: '10px 20px 12px 16px',
                   background: 'transparent',
                   border: 0,
-                  borderBottom: isActive ? '2px solid #c9a84c' : '2px solid transparent',
+                  borderBottom: isActive ? '2px solid var(--t-gold)' : '2px solid transparent',
                   marginBottom: -1,
                   display: 'block',
                 }}
               >
-                <span className="block font-mono text-[14px] font-semibold tabular-nums" style={{ color: isActive ? '#c9a84c' : '#8a8070' }}>
+                <span className="block font-mono text-[14px] font-semibold tabular-nums" style={{ color: isActive ? 'var(--t-gold)' : 'var(--t-muted)' }}>
                   {d.day}
                 </span>
-                <span className="block font-mono text-[9px] uppercase tracking-[.06em] mt-0.5" style={{ color: isActive ? 'rgba(201,168,76,.7)' : 'rgba(138,128,112,.6)' }}>
+                <span className="block font-mono text-[9px] uppercase tracking-[.06em] mt-0.5" style={{ color: isActive ? 'var(--t-gold-70)' : 'var(--t-muted-60)' }}>
                   {d.weekday.slice(0, 3)}
                 </span>
                 {isToday && (
-                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: '#c9a84c' }} title="Today" />
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--t-gold)' }} title="Today" />
                 )}
               </button>
               {/* Delete day button */}
@@ -318,7 +318,7 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
                 style={{
                   position: 'absolute', top: 4, right: 2,
                   background: 'none', border: 'none',
-                  color: 'rgba(138,128,112,.35)', cursor: 'pointer',
+                  color: 'var(--t-muted-35)', cursor: 'pointer',
                   fontSize: 11, lineHeight: 1, padding: '2px 3px',
                 }}
               >
@@ -335,9 +335,9 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
           style={{
             alignSelf: 'center',
             background: 'none',
-            border: '1px dashed rgba(201,168,76,.3)',
+            border: '1px dashed var(--t-gold-30)',
             borderRadius: 2,
-            color: '#c9a84c',
+            color: 'var(--t-gold)',
             cursor: 'pointer',
             fontFamily: 'var(--font-mono)',
             fontSize: 11,
@@ -354,25 +354,25 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
       {/* Add day form */}
       {showDayForm && (
         <div className="luxury-card" style={{ marginBottom: 24, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             New day
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 10 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase' }}>Day #</label>
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase' }}>Day #</label>
               <input type="text" placeholder="19" value={dayDraft.day} onChange={e => setDayDraft(d => ({ ...d, day: e.target.value }))} style={INPUT()} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase' }}>Weekday</label>
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase' }}>Weekday</label>
               <input type="text" placeholder="Saturday" value={dayDraft.weekday} onChange={e => setDayDraft(d => ({ ...d, weekday: e.target.value }))} style={INPUT()} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase' }}>Weather</label>
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase' }}>Weather</label>
               <input type="text" placeholder="☀ 28°C" value={dayDraft.weather} onChange={e => setDayDraft(d => ({ ...d, weather: e.target.value }))} style={INPUT()} />
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8a8070', textTransform: 'uppercase' }}>Subtitle</label>
+            <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase' }}>Subtitle</label>
             <input type="text" placeholder="Short summary of the day" value={dayDraft.subtitle} onChange={e => setDayDraft(d => ({ ...d, subtitle: e.target.value }))} style={INPUT()} />
           </div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -405,9 +405,9 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
             fontWeight: 600,
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
-            color: '#c9a84c',
-            background: 'rgba(201,168,76,.06)',
-            border: '1px dashed rgba(201,168,76,.3)',
+            color: 'var(--t-gold)',
+            background: 'var(--t-gold-06)',
+            border: '1px dashed var(--t-gold-30)',
             borderRadius: 3,
             padding: '10px 20px',
             cursor: 'pointer',
@@ -424,7 +424,7 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
           className="luxury-card"
           style={{ marginTop: 24, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}
         >
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             {editing ? 'Edit event' : `New event — ${activeDay?.weekday} ${activeDay?.day}`}
           </div>
 
@@ -460,9 +460,9 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
                       padding: '4px 8px',
                       borderRadius: 2,
                       cursor: 'pointer',
-                      border: active ? '1px solid rgba(201,168,76,.6)' : '1px solid rgba(255,255,255,.1)',
-                      background: active ? 'rgba(201,168,76,.12)' : 'rgba(255,255,255,.03)',
-                      color: active ? '#c9a84c' : '#8a8070',
+                      border: active ? '1px solid var(--t-gold-60)' : '1px solid var(--t-w10)',
+                      background: active ? 'var(--t-gold-12)' : 'var(--t-w03)',
+                      color: active ? 'var(--t-gold)' : 'var(--t-muted)',
                       display: 'inline-flex', alignItems: 'center', gap: 4,
                     }}
                   >
@@ -557,18 +557,18 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
             onClick={e => e.stopPropagation()}
           >
             <div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#c9a84c', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
                 Time conflict
               </div>
-              <p style={{ margin: 0, fontSize: 14, color: '#f5f0e8', lineHeight: 1.5 }}>
-                <strong style={{ color: '#c9a84c' }}>{draft.time}</strong> overlaps with an existing event:
+              <p style={{ margin: 0, fontSize: 14, color: 'var(--t-fg)', lineHeight: 1.5 }}>
+                <strong style={{ color: 'var(--t-gold)' }}>{draft.time}</strong> overlaps with an existing event:
               </p>
-              <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(255,255,255,.04)', borderLeft: '2px solid rgba(201,168,76,.4)', borderRadius: 2 }}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#c9a84c' }}>{conflict.time}</div>
-                <div style={{ fontSize: 13, color: '#f5f0e8', marginTop: 2 }}>{conflict.title}</div>
+              <div style={{ marginTop: 10, padding: '10px 12px', background: 'var(--t-w04)', borderLeft: '2px solid var(--t-gold-40)', borderRadius: 2 }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t-gold)' }}>{conflict.time}</div>
+                <div style={{ fontSize: 13, color: 'var(--t-fg)', marginTop: 2 }}>{conflict.title}</div>
               </div>
             </div>
-            <p style={{ margin: 0, fontSize: 13, color: '#8a8070' }}>What would you like to do?</p>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--t-muted)' }}>What would you like to do?</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button
                 type="button"
@@ -587,7 +587,7 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
               <button
                 type="button"
                 onClick={handleSubmitForce}
-                style={{ ...BTN_CANCEL, textAlign: 'center', color: 'rgba(138,128,112,.6)', borderColor: 'rgba(255,255,255,.06)' }}
+                style={{ ...BTN_CANCEL, textAlign: 'center', color: 'var(--t-muted-60)', borderColor: 'var(--t-w06)' }}
               >
                 Add anyway
               </button>

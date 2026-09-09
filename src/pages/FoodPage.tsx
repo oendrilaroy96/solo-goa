@@ -7,9 +7,9 @@ const TAB_STYLE = (active: boolean) => ({
   padding: '8px 18px 10px',
   background: 'transparent',
   border: 0,
-  borderBottom: active ? '2px solid #c9a84c' : '2px solid transparent',
+  borderBottom: active ? '2px solid var(--t-gold)' : '2px solid transparent',
   marginBottom: -1,
-  color: active ? '#c9a84c' : '#8a8070',
+  color: active ? 'var(--t-gold)' : 'var(--t-muted)',
   fontFamily: 'var(--font-mono)',
   fontSize: 11,
   fontWeight: 600,
@@ -42,7 +42,7 @@ function FoodItemCard({ item }: { item: FoodItem }) {
           <span
             key={t}
             className="inline-block whitespace-nowrap rounded-sm px-2 py-0.5 text-[10px] font-mono font-semibold border"
-            style={{ background: 'rgba(201,168,76,.1)', color: '#c9a84c', borderColor: 'rgba(201,168,76,.25)' }}
+            style={{ background: 'var(--t-gold-10)', color: 'var(--t-gold)', borderColor: 'var(--t-gold-25)' }}
           >
             {t}
           </span>
@@ -71,14 +71,14 @@ export default function FoodPage() {
       <div className="gold-line mb-8" />
       <h2
         className="m-0 mb-1 text-[22px]"
-        style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: '#f5f0e8' }}
+        style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--t-fg)' }}
       >
         Food &amp; drink
       </h2>
 
       {/* Tabs */}
       <div
-        style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,.07)', marginBottom: 32, marginTop: 16 }}
+        style={{ display: 'flex', borderBottom: '1px solid var(--t-w07)', marginBottom: 32, marginTop: 16 }}
         role="tablist"
       >
         <button type="button" role="tab" aria-selected={tab === 'planned'} onClick={() => setTab('planned')} style={TAB_STYLE(tab === 'planned')}>
@@ -93,7 +93,7 @@ export default function FoodPage() {
         <div key={group.title} className="first:mt-0 mt-10">
           <h3
             className="font-semibold uppercase tracking-[.1em] mb-4 mt-0 text-[10px]"
-            style={{ fontFamily: 'var(--font-mono)', color: '#c9a84c' }}
+            style={{ fontFamily: 'var(--font-mono)', color: 'var(--t-gold)' }}
           >
             {group.title}
           </h3>

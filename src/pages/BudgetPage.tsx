@@ -71,11 +71,11 @@ export default function BudgetPage({ onTotalChange }: Props) {
       <div className="gold-line mb-8" />
       <h2
         className="m-0 mb-1 text-[22px]"
-        style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: '#f5f0e8' }}
+        style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--t-fg)' }}
       >
         Cost tracker
       </h2>
-      <p className="mt-1 mb-8 text-[13px]" style={{ color: '#8a8070' }}>
+      <p className="mt-1 mb-8 text-[13px]" style={{ color: 'var(--t-muted)' }}>
         Tap a category to expand it. Edit any amount and every total updates live.
       </p>
 
@@ -90,7 +90,7 @@ export default function BudgetPage({ onTotalChange }: Props) {
           return (
             <div
               key={group.id}
-              style={{ border: '1px solid rgba(255,255,255,.07)' }}
+              style={{ border: '1px solid var(--t-w07)' }}
             >
               {/* Accordion header */}
               <button
@@ -98,12 +98,12 @@ export default function BudgetPage({ onTotalChange }: Props) {
                 aria-expanded={isOpen}
                 onClick={() => toggleGroup(group.id)}
                 className="w-full flex items-center gap-3 px-4 py-3.5 cursor-pointer text-left transition-colors"
-                style={{ background: isOpen ? '#141414' : 'transparent' }}
+                style={{ background: isOpen ? 'var(--t-card)' : 'transparent' }}
               >
                 <span
                   className="flex-none font-mono text-[14px] font-bold leading-none select-none transition-transform"
                   style={{
-                    color: '#c9a84c',
+                    color: 'var(--t-gold)',
                     transform: isOpen ? 'rotate(45deg)' : 'none',
                     display: 'inline-block',
                   }}
@@ -112,12 +112,12 @@ export default function BudgetPage({ onTotalChange }: Props) {
                   +
                 </span>
                 <span className="flex-1 min-w-0 text-left">
-                  <span className="font-semibold text-[13px] block" style={{ color: '#f5f0e8' }}>{group.name}</span>
-                  <span className="font-normal text-[11px] mt-0.5 block" style={{ color: '#8a8070' }}>{group.subtitle}</span>
+                  <span className="font-semibold text-[13px] block" style={{ color: 'var(--t-fg)' }}>{group.name}</span>
+                  <span className="font-normal text-[11px] mt-0.5 block" style={{ color: 'var(--t-muted)' }}>{group.subtitle}</span>
                 </span>
                 <b
                   className="font-mono font-semibold tabular-nums text-[13px]"
-                  style={{ color: '#c9a84c' }}
+                  style={{ color: 'var(--t-gold)' }}
                 >
                   {fmt(groupSum)}
                 </b>
@@ -127,7 +127,7 @@ export default function BudgetPage({ onTotalChange }: Props) {
                 <div
                   style={{
                     borderTop: '1px solid rgba(201,168,76,.15)',
-                    background: '#0d0d0d',
+                    background: 'var(--t-bg)',
                   }}
                 >
                   {group.items.map((item, itemIdx) => {
@@ -137,17 +137,17 @@ export default function BudgetPage({ onTotalChange }: Props) {
                       <div
                         key={item.id}
                         className="flex flex-col gap-2 px-4 py-3 sm:grid sm:grid-cols-[1fr_112px] sm:gap-3 sm:items-center"
-                        style={{ borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,.05)' }}
+                        style={{ borderBottom: isLast ? 'none' : '1px solid var(--t-w05)' }}
                       >
                         <label
                           className="text-[12.5px] font-semibold sm:text-[13px]"
-                          style={{ color: '#f5f0e8' }}
+                          style={{ color: 'var(--t-fg)' }}
                           htmlFor={`budget-${item.id}`}
                         >
                           {item.label}
                           <small
                             className="block font-normal mt-0.5 text-[11px]"
-                            style={{ color: '#8a8070' }}
+                            style={{ color: 'var(--t-muted)' }}
                           >
                             {item.sublabel}
                           </small>
@@ -155,11 +155,11 @@ export default function BudgetPage({ onTotalChange }: Props) {
                         <div
                           className="flex items-center overflow-hidden"
                           style={{
-                            background: '#0d0d0d',
-                            border: '1px solid rgba(255,255,255,.1)',
+                            background: 'var(--t-bg)',
+                            border: '1px solid var(--t-w10)',
                           }}
                         >
-                          <span className="pl-3 font-mono text-[13px]" style={{ color: '#8a8070' }}>₹</span>
+                          <span className="pl-3 font-mono text-[13px]" style={{ color: 'var(--t-muted)' }}>₹</span>
                           <input
                             id={`budget-${item.id}`}
                             type="number"
@@ -169,7 +169,7 @@ export default function BudgetPage({ onTotalChange }: Props) {
                             onChange={e => setValue(idx, parseFloat(e.target.value) || 0)}
                             aria-label={item.label}
                             className="w-full border-0 outline-0 px-2 py-2.5 text-right font-mono text-[14px] tabular-nums bg-transparent"
-                            style={{ color: '#f5f0e8' }}
+                            style={{ color: 'var(--t-fg)' }}
                           />
                         </div>
                       </div>
@@ -186,15 +186,15 @@ export default function BudgetPage({ onTotalChange }: Props) {
       <div
         className="flex items-baseline justify-between mt-6 px-5 py-4"
         style={{
-          background: 'linear-gradient(135deg, rgba(201,168,76,.08), rgba(201,168,76,.03))',
-          border: '1px solid rgba(201,168,76,.2)',
+          background: 'linear-gradient(135deg, var(--t-gold-08), rgba(201,168,76,.03))',
+          border: '1px solid var(--t-gold-20)',
         }}
       >
-        <span className="font-semibold text-[13px]" style={{ color: '#f5f0e8' }}>Planned total</span>
-        <b className="font-mono text-[24px] tabular-nums sm:text-[28px]" style={{ color: '#c9a84c' }}>{fmt(total)}</b>
+        <span className="font-semibold text-[13px]" style={{ color: 'var(--t-fg)' }}>Planned total</span>
+        <b className="font-mono text-[24px] tabular-nums sm:text-[28px]" style={{ color: 'var(--t-gold)' }}>{fmt(total)}</b>
       </div>
 
-      <p className="mt-4 text-[12px] sm:text-[12.5px]" style={{ color: '#8a8070' }}>
+      <p className="mt-4 text-[12px] sm:text-[12.5px]" style={{ color: 'var(--t-muted)' }}>
         Most food costs are still unconfirmed placeholders (₹0). Lodging confirmed through 18 September. The Goa airport transfer was priced for the wrong airport (Mopa, not Dabolim) — needs a fresh quote.
       </p>
     </section>

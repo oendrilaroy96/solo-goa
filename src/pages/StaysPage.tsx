@@ -6,9 +6,9 @@ const TAB_STYLE = (active: boolean) => ({
   padding: '8px 18px 10px',
   background: 'transparent',
   border: 0,
-  borderBottom: active ? '2px solid #c9a84c' : '2px solid transparent',
+  borderBottom: active ? '2px solid var(--t-gold)' : '2px solid transparent',
   marginBottom: -1,
-  color: active ? '#c9a84c' : '#8a8070',
+  color: active ? 'var(--t-gold)' : 'var(--t-muted)',
   fontFamily: 'var(--font-mono)',
   fontSize: 11,
   fontWeight: 600,
@@ -30,14 +30,14 @@ export default function StaysPage() {
       <div className="gold-line mb-8" />
       <h2
         className="m-0 mb-1 text-[22px]"
-        style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: '#f5f0e8' }}
+        style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--t-fg)' }}
       >
         Stays
       </h2>
 
       {/* Tabs */}
       <div
-        style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,.07)', marginBottom: 32, marginTop: 16 }}
+        style={{ display: 'flex', borderBottom: '1px solid var(--t-w07)', marginBottom: 32, marginTop: 16 }}
         role="tablist"
       >
         <button type="button" role="tab" aria-selected={tab === 'booked'} onClick={() => setTab('booked')} style={TAB_STYLE(tab === 'booked')}>
