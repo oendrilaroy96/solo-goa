@@ -143,8 +143,9 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
 
   useEffect(() => {
     loadItinerary().then(days => { setAllDays(days); setLoading(false); });
-    supabase.from('documents').select('label').order('label').then(({ data }) => {
-      if (data) setDocLabels(data.map((d: { label: string }) => d.label));
+    supabase.from('documents').select('*').order('label').then(({ data, error }) => {
+      if (error) console.error('docs fetch:', error);
+      if (data) setDocLabels((data as { label: string }[]).map(d => d.label));
     });
   }, []);
 
