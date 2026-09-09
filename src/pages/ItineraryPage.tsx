@@ -117,6 +117,22 @@ function getStoredDay(): string {
   try { return localStorage.getItem('goaSelectedDay') || '14'; } catch { return '14'; }
 }
 
+// Strip HTML tags → plain text for the edit textarea
+function stripHtml(html: string): string {
+  return html
+    .replace(/<p[^>]*>/gi, '')
+    .replace(/<\/p>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<a[^>]*href="([^"]*)"[^>]*>([^<]*)<\/a>/gi, '$2')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 // ─── component ────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -178,8 +194,10 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
 
   function openEdit(ev: EventItem) {
     setEditing(ev);
+    const hasHtml = ev.description.includes('<');
     setDraft({
-      time: ev.time, title: ev.title, description: ev.description,
+      time: ev.time, title: ev.title,
+      description: hasHtml ? stripHtml(ev.description) : ev.description,
       tag: ev.tag, tagVariant: ev.tagVariant,
       categories: ev.categories ?? [],
       phone: ev.phone ?? '', email: ev.email ?? '',
@@ -427,6 +445,13 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             {editing ? 'Edit event' : `New event — ${activeDay?.weekday} ${activeDay?.day}`}
           </div>
+
+          {/* Notice for system events that had embedded HTML links */}
+          {editing && editing.description.includes('<') && (
+            <div style={{ fontSize: 11, color: 'var(--t-muted)', background: 'var(--t-w04)', border: '1px solid var(--t-w10)', borderRadius: 2, padding: '8px 10px', lineHeight: 1.5 }}>
+              Links from the original description have been removed. Use the <strong style={{ color: 'var(--t-fg)' }}>Map link</strong>, <strong style={{ color: 'var(--t-fg)' }}>Phone</strong>, and <strong style={{ color: 'var(--t-fg)' }}>Email</strong> fields below instead.
+            </div>
+          )}
 
           {/* Time + Title */}
           <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12 }}>
