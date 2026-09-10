@@ -205,6 +205,7 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
     : <span style={{ fontSize: 30 }}>{form.cover_emoji || '✈️'}</span>;
 
   return (
+    <>
     <div className="px-4 pt-16 pb-20 sm:px-6 sm:pt-10 sm:pb-20" style={{ minHeight: '100vh', background: 'var(--t-bg)' }}>
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
@@ -820,5 +821,6 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
         </div>
       </div>
     )}
+    </>
   );
 }
