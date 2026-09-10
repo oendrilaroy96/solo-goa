@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { DayData, EventItem, TagVariant, EventCategory } from '../data/itinerary';
 import { EVENT_CATEGORIES, CATEGORY_ICON, CATEGORY_LABEL } from '../data/itinerary';
 import DayPanel from '../components/DayPanel';
@@ -238,36 +238,53 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
     });
   }, [tripId]);
 
-  // Sync itinerary days when trip date range extends
+  // Track previous trip dates so we only react to actual date changes, not allDays mutations
+  const prevDatesRef = useRef({ from: trip.date_from, to: trip.date_to });
+
   useEffect(() => {
-    if (loading || allDays.length === 0) return;
-    if (!trip.date_from || !trip.date_to) return;
+    const prev = prevDatesRef.current;
+    const dateChanged = prev.from !== trip.date_from || prev.to !== trip.date_to;
+    if (!dateChanged) return;
+    prevDatesRef.current = { from: trip.date_from, to: trip.date_to };
+
+    if (loading || allDays.length === 0 || !trip.date_from || !trip.date_to) return;
+
     const generated = generateDaysFromTrip(trip);
-    if (generated.length <= allDays.length) return;
-    const newDays = generated.slice(allDays.length);
-    const merged = [...allDays, ...newDays];
-    persist(merged).then(() => {
-      if (trip.destination && trip.date_from && trip.date_to) {
-        fetchTripWeather(trip.destination, trip.date_from, trip.date_to, trip.geo_lat, trip.geo_lon)
-          .then(weatherMap => {
-            if (!Object.keys(weatherMap).length) return;
-            const start = new Date(trip.date_from + 'T00:00:00');
-            setAllDays(prev => {
-              const updated = prev.map((day, i) => {
-                if (day.weather) return day;
-                const d = new Date(start);
-                d.setDate(d.getDate() + i);
-                const w = weatherMap[localDateStr(d)];
-                return w ? { ...day, weather: w } : day;
-              });
-              const changed = updated.some((d, i) => d.weather !== prev[i].weather);
-              if (changed) saveItinerary(trip.id, updated);
-              return changed ? updated : prev;
-            });
-          });
+
+    if (generated.length === allDays.length) return; // no change in day count
+
+    let next: DayData[];
+    if (generated.length > allDays.length) {
+      // Dates extended — append new days (preserve existing)
+      next = [...allDays, ...generated.slice(allDays.length)];
+    } else {
+      // Dates shortened — trim days beyond the new range
+      next = allDays.slice(0, generated.length);
+      if (!next.find(d => d.day === selectedDay)) {
+        setSelectedDay(next[next.length - 1]?.day ?? next[0]?.day);
       }
+    }
+
+    persist(next).then(() => {
+      if (!trip.destination) return;
+      fetchTripWeather(trip.destination, trip.date_from, trip.date_to, trip.geo_lat, trip.geo_lon)
+        .then(weatherMap => {
+          if (!Object.keys(weatherMap).length) return;
+          const start = new Date(trip.date_from + 'T00:00:00');
+          setAllDays(prev => {
+            const updated = prev.map((day, i) => {
+              if (day.weather) return day;
+              const d = new Date(start);
+              d.setDate(d.getDate() + i);
+              return { ...day, weather: weatherMap[localDateStr(d)] || '' };
+            });
+            const changed = updated.some((d, i) => d.weather !== prev[i].weather);
+            if (changed) saveItinerary(trip.id, updated);
+            return changed ? updated : prev;
+          });
+        });
     });
-  }, [trip.date_from, trip.date_to, loading, allDays.length]);
+  }, [trip.date_from, trip.date_to, loading]);
 
   useEffect(() => {
     try { localStorage.setItem('goaSelectedDay', selectedDay); } catch { /* */ }
