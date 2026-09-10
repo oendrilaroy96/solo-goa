@@ -5,7 +5,12 @@ import DayPanel from '../components/DayPanel';
 import { loadItinerary, saveItinerary, newEventId, newDayId } from '../lib/itinerary-store';
 import { supabase } from '../lib/supabase';
 import type { Trip } from '../lib/trips';
+import { updateTrip } from '../lib/trips';
 import { fetchTripWeather } from '../lib/weather';
+
+function localDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS   = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -94,13 +99,13 @@ type EventDraft = {
   categories: EventCategory[];
   phone: string; email: string; mapUrl: string; docLabel: string;
 };
-type DayDraft = { day: string; weekday: string; subtitle: string; weather: string };
+type DayDraft = { isoDate: string; subtitle: string; weather: string };
 
 const BLANK_EVENT = (): EventDraft => ({
   time: '', title: '', description: '', tag: '', tagVariant: 'default',
   categories: [], phone: '', email: '', mapUrl: '', docLabel: '',
 });
-const BLANK_DAY   = (): DayDraft   => ({ day: '', weekday: '', subtitle: '', weather: '' });
+const BLANK_DAY = (): DayDraft => ({ isoDate: '', subtitle: '', weather: '' });
 
 // ─── styles ───────────────────────────────────────────────────────────────────
 
@@ -165,9 +170,10 @@ function stripHtml(html: string): string {
 interface Props {
   trip: Trip;
   onOpenDoc?: (label: string) => void;
+  onTripChange?: (updated: Trip) => void;
 }
 
-export default function ItineraryPage({ trip, onOpenDoc }: Props) {
+export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) {
   const tripId = trip.id;
   const [allDays, setAllDays]         = useState<DayData[]>([]);
   const [loading, setLoading]         = useState(true);
@@ -215,7 +221,7 @@ export default function ItineraryPage({ trip, onOpenDoc }: Props) {
             if (day.weather) return day;
             const d = new Date(start);
             d.setDate(d.getDate() + i);
-            const iso = d.toISOString().split('T')[0];
+            const iso = localDateStr(d);
             const w = weatherMap[iso];
             return w ? { ...day, weather: w } : day;
           });
@@ -231,6 +237,37 @@ export default function ItineraryPage({ trip, onOpenDoc }: Props) {
       if (data) setDocLabels((data as { label: string }[]).map(d => d.label));
     });
   }, [tripId]);
+
+  // Sync itinerary days when trip date range extends
+  useEffect(() => {
+    if (loading || allDays.length === 0) return;
+    if (!trip.date_from || !trip.date_to) return;
+    const generated = generateDaysFromTrip(trip);
+    if (generated.length <= allDays.length) return;
+    const newDays = generated.slice(allDays.length);
+    const merged = [...allDays, ...newDays];
+    persist(merged).then(() => {
+      if (trip.destination && trip.date_from && trip.date_to) {
+        fetchTripWeather(trip.destination, trip.date_from, trip.date_to, trip.geo_lat, trip.geo_lon)
+          .then(weatherMap => {
+            if (!Object.keys(weatherMap).length) return;
+            const start = new Date(trip.date_from + 'T00:00:00');
+            setAllDays(prev => {
+              const updated = prev.map((day, i) => {
+                if (day.weather) return day;
+                const d = new Date(start);
+                d.setDate(d.getDate() + i);
+                const w = weatherMap[localDateStr(d)];
+                return w ? { ...day, weather: w } : day;
+              });
+              const changed = updated.some((d, i) => d.weather !== prev[i].weather);
+              if (changed) saveItinerary(trip.id, updated);
+              return changed ? updated : prev;
+            });
+          });
+      }
+    });
+  }, [trip.date_from, trip.date_to, loading, allDays.length]);
 
   useEffect(() => {
     try { localStorage.setItem('goaSelectedDay', selectedDay); } catch { /* */ }
@@ -344,13 +381,29 @@ export default function ItineraryPage({ trip, onOpenDoc }: Props) {
   }
 
   async function handleAddDay() {
-    if (!dayDraft.day.trim() || !dayDraft.weekday.trim()) return;
-    const newDay: DayData = { ...dayDraft, id: newDayId(dayDraft.day), events: [] };
+    if (!dayDraft.isoDate) return;
+    const d = new Date(dayDraft.isoDate + 'T00:00:00');
+    const dayNum  = String(d.getDate());
+    const weekday = WEEKDAYS[d.getDay()];
+    const month   = MONTHS[d.getMonth()];
+    const newDay: DayData = {
+      id: newDayId(dayNum),
+      day: dayNum,
+      weekday,
+      subtitle: dayDraft.subtitle || `${weekday}, ${dayNum} ${month}`,
+      weather: dayDraft.weather,
+      events: [],
+    };
     const next = [...allDays, newDay];
     await persist(next);
-    setSelectedDay(dayDraft.day);
+    setSelectedDay(dayNum);
     setShowDayForm(false);
     setDayDraft(BLANK_DAY());
+    // If new day extends past trip end date, update the trip
+    if (trip.date_to < dayDraft.isoDate) {
+      await updateTrip(trip.id, { date_to: dayDraft.isoDate });
+      onTripChange?.({ ...trip, date_to: dayDraft.isoDate });
+    }
   }
 
   // ── render ────────────────────────────────────────────────────────────────
@@ -423,7 +476,16 @@ export default function ItineraryPage({ trip, onOpenDoc }: Props) {
         {/* Add day */}
         <button
           type="button"
-          onClick={() => setShowDayForm(v => !v)}
+          onClick={() => {
+            if (!showDayForm) {
+              // Default to next day after trip end date (or today if no trip end)
+              const lastDayDate = trip.date_to || new Date().toISOString().split('T')[0];
+              const next = new Date(lastDayDate + 'T00:00:00');
+              next.setDate(next.getDate() + 1);
+              setDayDraft(d => ({ ...d, isoDate: localDateStr(next) }));
+            }
+            setShowDayForm(v => !v);
+          }}
           style={{
             alignSelf: 'center',
             background: 'none',
@@ -449,27 +511,29 @@ export default function ItineraryPage({ trip, onOpenDoc }: Props) {
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             New day
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-[80px_1fr_1fr] gap-[10px]">
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_140px] gap-[10px]">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase' }}>Day #</label>
-              <input type="text" placeholder="19" value={dayDraft.day} onChange={e => setDayDraft(d => ({ ...d, day: e.target.value }))} style={INPUT()} />
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase' }}>Date *</label>
+              <input
+                type="date"
+                value={dayDraft.isoDate}
+                min={trip.date_from || undefined}
+                onChange={e => setDayDraft(d => ({ ...d, isoDate: e.target.value }))}
+                style={{ ...INPUT(), colorScheme: 'dark' }}
+              />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase' }}>Weekday</label>
-              <input type="text" placeholder="Saturday" value={dayDraft.weekday} onChange={e => setDayDraft(d => ({ ...d, weekday: e.target.value }))} style={INPUT()} />
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase' }}>Subtitle</label>
+              <input type="text" placeholder="Short summary of the day" value={dayDraft.subtitle} onChange={e => setDayDraft(d => ({ ...d, subtitle: e.target.value }))} style={INPUT()} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase' }}>Weather</label>
               <input type="text" placeholder="☀ 28°C" value={dayDraft.weather} onChange={e => setDayDraft(d => ({ ...d, weather: e.target.value }))} style={INPUT()} />
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase' }}>Subtitle</label>
-            <input type="text" placeholder="Short summary of the day" value={dayDraft.subtitle} onChange={e => setDayDraft(d => ({ ...d, subtitle: e.target.value }))} style={INPUT()} />
-          </div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <button type="button" onClick={() => { setShowDayForm(false); setDayDraft(BLANK_DAY()); }} style={BTN_CANCEL}>Cancel</button>
-            <button type="button" onClick={handleAddDay} style={BTN_SAVE}>Add</button>
+            <button type="button" onClick={handleAddDay} disabled={!dayDraft.isoDate} style={BTN_SAVE}>Add</button>
           </div>
         </div>
       )}

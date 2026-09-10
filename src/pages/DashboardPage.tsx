@@ -6,6 +6,14 @@ import type { User } from '@supabase/supabase-js';
 import EditTripModal from '../components/EditTripModal';
 
 // ── Trip type options ───────────────────────────────────────────────────────
+const TRAVEL_MODES: { value: string; label: string; icon: string }[] = [
+  { value: 'flight', label: 'Flight',  icon: '✈️' },
+  { value: 'train',  label: 'Train',   icon: '🚂' },
+  { value: 'bus',    label: 'Bus',     icon: '🚌' },
+  { value: 'car',    label: 'Car',     icon: '🚗' },
+  { value: 'ferry',  label: 'Ferry',   icon: '🚢' },
+];
+
 const TRIP_TYPES: { value: TripType; label: string; icon: string }[] = [
   { value: 'solo',    label: 'Solo',    icon: '🧍' },
   { value: 'couple',  label: 'Couple',  icon: '👫' },
@@ -129,6 +137,8 @@ const BLANK_FORM = () => ({
   geo_city: '',
   geo_lat: null as number | null,
   geo_lon: null as number | null,
+  travel_mode: '' as 'flight' | 'train' | 'bus' | 'car' | 'ferry' | '',
+  travel_from: '',
 });
 
 interface LocationSuggestion {
@@ -286,6 +296,8 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
       geo_city:         form.geo_city     || undefined,
       geo_lat:          form.geo_lat      ?? undefined,
       geo_lon:          form.geo_lon      ?? undefined,
+      travel_mode: (form.travel_mode as Trip['travel_mode']) || undefined,
+      travel_from: form.travel_from || undefined,
     });
     setCreating(false);
     if (trip) {
@@ -677,6 +689,24 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                   <label style={labelStyle}>To</label>
                   <input type="date" value={form.date_to} min={form.date_from} onChange={e => setForm(f => ({ ...f, date_to: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
                 </div>
+              </div>
+
+              {/* Travel mode */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={labelStyle}>How are you getting there?</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {TRAVEL_MODES.map(tm => (
+                    <button key={tm.value} type="button"
+                      onClick={() => setForm(f => ({ ...f, travel_mode: f.travel_mode === tm.value ? '' : tm.value as typeof f.travel_mode }))}
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, padding: '6px 12px', borderRadius: 3, cursor: 'pointer', letterSpacing: '0.06em', color: form.travel_mode === tm.value ? 'var(--t-gold)' : 'var(--t-muted)', background: form.travel_mode === tm.value ? 'var(--t-gold-08)' : 'var(--t-w04)', border: form.travel_mode === tm.value ? '1px solid var(--t-gold-30)' : '1px solid var(--t-w10)' }}>
+                      {tm.icon} {tm.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={labelStyle}>Traveling from</label>
+                <input type="text" value={form.travel_from} onChange={e => setForm(f => ({ ...f, travel_from: e.target.value }))} placeholder="e.g. Mumbai, Bangalore…" style={inputStyle} />
               </div>
 
               {/* Actions */}

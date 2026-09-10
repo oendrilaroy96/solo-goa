@@ -312,7 +312,7 @@ export default function App() {
             >
               {page === p.id && (
                 <>
-                  {p.id === 'itinerary'          && <ItineraryPage trip={trip} onOpenDoc={openDoc} />}
+                  {p.id === 'itinerary'          && <ItineraryPage trip={trip} onOpenDoc={openDoc} onTripChange={setTrip} />}
                   {p.id === 'stays'              && <StaysPage />}
                   {p.id === 'budget'             && <BudgetPage tripId={trip.id} onTotalChange={handleTotalChange} />}
                   {p.id === 'food-reference'     && <FoodPage />}

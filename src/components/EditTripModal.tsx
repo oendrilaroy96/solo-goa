@@ -3,6 +3,14 @@ import type { Trip, TripType } from '../lib/trips';
 import { updateTrip } from '../lib/trips';
 import { supabase } from '../lib/supabase';
 
+const TRAVEL_MODES: { value: string; label: string; icon: string }[] = [
+  { value: 'flight', label: 'Flight',  icon: '✈️' },
+  { value: 'train',  label: 'Train',   icon: '🚂' },
+  { value: 'bus',    label: 'Bus',     icon: '🚌' },
+  { value: 'car',    label: 'Car',     icon: '🚗' },
+  { value: 'ferry',  label: 'Ferry',   icon: '🚢' },
+];
+
 const TRIP_TYPES: { value: TripType; label: string; icon: string }[] = [
   { value: 'solo',    label: 'Solo',    icon: '🧍' },
   { value: 'couple',  label: 'Couple',  icon: '👫' },
@@ -60,6 +68,8 @@ export default function EditTripModal({ trip, onClose, onSave }: Props) {
     geo_city:         trip.geo_city ?? '',
     geo_lat:          trip.geo_lat ?? null as number | null,
     geo_lon:          trip.geo_lon ?? null as number | null,
+    travel_mode: (trip.travel_mode ?? '') as 'flight' | 'train' | 'bus' | 'car' | 'ferry' | '',
+    travel_from: trip.travel_from ?? '',
   });
   const [locQuery, setLocQuery]           = useState(trip.destination ?? '');
   const [suggestions, setSuggestions]     = useState<LocationSuggestion[]>([]);
@@ -136,6 +146,8 @@ export default function EditTripModal({ trip, onClose, onSave }: Props) {
       geo_city:         form.geo_city     || undefined,
       geo_lat:          form.geo_lat      ?? undefined,
       geo_lon:          form.geo_lon      ?? undefined,
+      travel_mode: (form.travel_mode as Trip['travel_mode']) || undefined,
+      travel_from: form.travel_from || undefined,
     });
     setSaving(false);
     onSave({
@@ -148,6 +160,8 @@ export default function EditTripModal({ trip, onClose, onSave }: Props) {
       geo_country: form.geo_country || undefined, geo_country_code: form.geo_country_code || undefined,
       geo_state: form.geo_state || undefined, geo_city: form.geo_city || undefined,
       geo_lat: form.geo_lat ?? undefined, geo_lon: form.geo_lon ?? undefined,
+      travel_mode: (form.travel_mode as Trip['travel_mode']) || undefined,
+      travel_from: form.travel_from || undefined,
     });
   }
 
@@ -312,6 +326,24 @@ export default function EditTripModal({ trip, onClose, onSave }: Props) {
               <label style={lbl}>To</label>
               <input type="date" value={form.date_to} min={form.date_from} onChange={e => setForm(f => ({ ...f, date_to: e.target.value }))} style={{ ...inp, colorScheme: 'dark' }} />
             </div>
+          </div>
+
+          {/* Travel */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <label style={lbl}>How are you getting there?</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {TRAVEL_MODES.map(tm => (
+                <button key={tm.value} type="button"
+                  onClick={() => setForm(f => ({ ...f, travel_mode: f.travel_mode === tm.value ? '' : tm.value as typeof f.travel_mode }))}
+                  style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, padding: '6px 12px', borderRadius: 3, cursor: 'pointer', letterSpacing: '0.06em', color: form.travel_mode === tm.value ? 'var(--t-gold)' : 'var(--t-muted)', background: form.travel_mode === tm.value ? 'var(--t-gold-08)' : 'var(--t-w04)', border: form.travel_mode === tm.value ? '1px solid var(--t-gold-30)' : '1px solid var(--t-w10)' }}>
+                  {tm.icon} {tm.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <label style={lbl}>Traveling from</label>
+            <input type="text" value={form.travel_from} onChange={e => setForm(f => ({ ...f, travel_from: e.target.value }))} placeholder="e.g. Mumbai, Bangalore…" style={inp} />
           </div>
 
           {/* Notes / description */}

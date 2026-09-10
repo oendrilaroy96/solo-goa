@@ -18,6 +18,8 @@ export interface Trip {
   geo_city?: string;
   geo_lat?: number;
   geo_lon?: number;
+  travel_mode?: 'flight' | 'train' | 'bus' | 'car' | 'ferry';
+  travel_from?: string;
   created_at: string;
 }
 
