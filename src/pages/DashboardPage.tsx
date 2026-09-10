@@ -184,7 +184,7 @@ export default function DashboardPage({ onSelectTrip }: Props) {
     : <span style={{ fontSize: 30 }}>{form.cover_emoji || '✈️'}</span>;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--t-bg)', padding: '40px 24px 80px' }}>
+    <div className="px-4 pt-16 pb-20 sm:px-6 sm:pt-10 sm:pb-20" style={{ minHeight: '100vh', background: 'var(--t-bg)' }}>
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
         {/* Header */}
@@ -199,7 +199,7 @@ export default function DashboardPage({ onSelectTrip }: Props) {
             </span>
           </div>
           <div className="gold-line" />
-          <div style={{ marginTop: 24, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ marginTop: 24, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
               <h1 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 28, color: 'var(--t-fg)', margin: 0 }}>
                 Your trips
@@ -567,7 +567,7 @@ export default function DashboardPage({ onSelectTrip }: Props) {
               <div
                 key={trip.id}
                 className="luxury-card"
-                style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px' }}
+                style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 12, padding: '16px' }}
               >
                 {/* Cover */}
                 <div style={{
@@ -606,7 +606,7 @@ export default function DashboardPage({ onSelectTrip }: Props) {
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
                   {deleteConfirm === trip.id ? (
                     <>
                       <button

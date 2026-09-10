@@ -125,7 +125,7 @@ export default function App() {
   if (!trip) {
     return (
       <>
-        <div style={{ position: 'fixed', top: 16, right: 20, zIndex: 50, display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div style={{ position: 'fixed', top: 12, right: 12, zIndex: 50, display: 'flex', gap: 6, alignItems: 'center' }}>
           <button
             type="button"
             onClick={toggle}
