@@ -331,11 +331,18 @@ export default function EditTripModal({ trip, onClose, onSave }: Props) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <label style={lbl}>People</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <button type="button" onClick={() => setForm(f => ({ ...f, people_count: Math.max(1, (f.people_count ?? 1) - 1) }))} style={{ width: 32, height: 38, fontSize: 18, border: '1px solid var(--t-w12)', borderRadius: 3, background: 'var(--t-bg)', color: 'var(--t-fg)', cursor: 'pointer' }}>−</button>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: 'var(--t-fg)', minWidth: 28, textAlign: 'center' }}>{form.people_count}</span>
-                <button type="button" onClick={() => setForm(f => ({ ...f, people_count: (f.people_count ?? 1) + 1 }))} style={{ width: 32, height: 38, fontSize: 18, border: '1px solid var(--t-w12)', borderRadius: 3, background: 'var(--t-bg)', color: 'var(--t-fg)', cursor: 'pointer' }}>+</button>
-              </div>
+              {form.trip_type === 'solo' || form.trip_type === 'couple' ? (
+                <div style={{ height: 38, display: 'flex', alignItems: 'center', paddingLeft: 4 }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: 'var(--t-muted)' }}>{form.people_count}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', marginLeft: 6 }}>fixed</span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button type="button" onClick={() => setForm(f => ({ ...f, people_count: Math.max(1, (f.people_count ?? 1) - 1) }))} style={{ width: 32, height: 38, fontSize: 18, border: '1px solid var(--t-w12)', borderRadius: 3, background: 'var(--t-bg)', color: 'var(--t-fg)', cursor: 'pointer' }}>−</button>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: 'var(--t-fg)', minWidth: 28, textAlign: 'center' }}>{form.people_count}</span>
+                  <button type="button" onClick={() => setForm(f => ({ ...f, people_count: (f.people_count ?? 1) + 1 }))} style={{ width: 32, height: 38, fontSize: 18, border: '1px solid var(--t-w12)', borderRadius: 3, background: 'var(--t-bg)', color: 'var(--t-fg)', cursor: 'pointer' }}>+</button>
+                </div>
+              )}
             </div>
           </div>
 
