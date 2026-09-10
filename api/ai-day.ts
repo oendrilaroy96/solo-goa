@@ -58,7 +58,8 @@ Rules:
 
     return res.status(200).json({ events });
   } catch (err) {
-    console.error('[ai-day]', err);
-    return res.status(500).json({ error: 'AI request failed' });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[ai-day]', msg);
+    return res.status(500).json({ error: `AI request failed: ${msg}` });
   }
 }
