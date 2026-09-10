@@ -54,11 +54,12 @@ export default function App() {
   const [session, setSession]     = useState<Session | null | undefined>(undefined); // undefined = loading
   const [trip, setTrip]           = useState<Trip | null>(null);
   const [page, setPage]           = useState<PageId>(getStoredPage);
-  const [total, setTotal]         = useState<number>(0);
+  const [paidTotal, setPaidTotal]   = useState<number>(0);
+  const [estTotal,  setEstTotal]    = useState<number>(0);
   const [autoOpenDoc, setAutoOpenDoc] = useState<string | null>(null);
   const [showEditTrip, setShowEditTrip] = useState(false);
   const { theme, toggle } = useTheme();
-  const handleTotalChange = useCallback((t: number) => setTotal(t), []);
+  const handleTotalsChange = useCallback((paid: number, est: number) => { setPaidTotal(paid); setEstTotal(est); }, []);
 
   // Auth state
   useEffect(() => {
@@ -263,14 +264,16 @@ export default function App() {
           })}
         </nav>
 
-        {/* Bottom: total + sign out */}
+        {/* Bottom: totals + sign out */}
         <div style={{ padding: '16px 20px 28px' }}>
-          <div className="gold-line" style={{ marginBottom: 16 }} />
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
-            Estimated total
+          <div className="gold-line" style={{ marginBottom: 12 }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Paid</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--t-gold)', fontWeight: 600 }}>{fmt(paidTotal)}</span>
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 16, color: 'var(--t-gold)', fontWeight: 600, marginBottom: 14 }}>
-            {fmt(total)}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Est.</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--t-muted)', fontWeight: 600 }}>{fmt(estTotal)}</span>
           </div>
           <button
             type="button"
@@ -314,7 +317,7 @@ export default function App() {
                 <>
                   {p.id === 'itinerary'          && <ItineraryPage trip={trip} onOpenDoc={openDoc} onTripChange={setTrip} />}
                   {p.id === 'stays'              && <StaysPage />}
-                  {p.id === 'budget'             && <BudgetPage tripId={trip.id} onTotalChange={handleTotalChange} />}
+                  {p.id === 'budget'             && <BudgetPage tripId={trip.id} onTotalsChange={handleTotalsChange} />}
                   {p.id === 'food-reference'     && <FoodPage />}
                   {p.id === 'shopping-reference' && <ShoppingPage />}
                   {p.id === 'packing'            && <PackingPage tripId={trip.id} />}
