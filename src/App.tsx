@@ -15,6 +15,7 @@ function useTheme() {
 
 import { supabase } from './lib/supabase';
 import { signOut } from './lib/auth';
+import EditTripModal from './components/EditTripModal';
 import ItineraryPage from './pages/ItineraryPage';
 import BudgetPage from './pages/BudgetPage';
 import StaysPage from './pages/StaysPage';
@@ -55,6 +56,7 @@ export default function App() {
   const [page, setPage]           = useState<PageId>(getStoredPage);
   const [total, setTotal]         = useState<number>(0);
   const [autoOpenDoc, setAutoOpenDoc] = useState<string | null>(null);
+  const [showEditTrip, setShowEditTrip] = useState(false);
   const { theme, toggle } = useTheme();
   const handleTotalChange = useCallback((t: number) => setTotal(t), []);
 
@@ -160,9 +162,15 @@ export default function App() {
                   ? <img src={trip.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : (trip.cover_emoji || '✈')}
               </div>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {trip.name}
               </span>
+              <button
+                type="button"
+                onClick={() => setShowEditTrip(true)}
+                title="Edit trip details"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--t-muted)', padding: '2px 4px', lineHeight: 1, flexShrink: 0 }}
+              >✏</button>
             </div>
             <button
               type="button"
@@ -355,6 +363,15 @@ export default function App() {
       >
         {theme === 'dark' ? '☀' : '🌙'}
       </button>
+
+      {/* ── Edit trip modal ── */}
+      {showEditTrip && (
+        <EditTripModal
+          trip={trip}
+          onClose={() => setShowEditTrip(false)}
+          onSave={updated => { setTrip(updated); setShowEditTrip(false); }}
+        />
+      )}
 
       {/* ── MOBILE BOTTOM NAV ── */}
       <nav
