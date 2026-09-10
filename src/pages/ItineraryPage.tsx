@@ -106,13 +106,14 @@ type EventDraft = {
   transportMode: TransportMode | '';
   ticketBooked: boolean | null;
   estimatedPrice: string;
+  boardingPassDocLabel: string;
 };
 type DayDraft = { isoDate: string; subtitle: string; weather: string };
 
 const BLANK_EVENT = (): EventDraft => ({
   time: '', title: '', description: '', tag: '', tagVariant: 'default',
   categories: [], phone: '', email: '', mapUrl: '', docLabel: '',
-  transportMode: '', ticketBooked: null, estimatedPrice: '',
+  transportMode: '', ticketBooked: null, estimatedPrice: '', boardingPassDocLabel: '',
 });
 const BLANK_DAY = (): DayDraft => ({ isoDate: '', subtitle: '', weather: '' });
 
@@ -207,6 +208,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
 
   // inline doc upload (inside event form)
   const [showDocUpload, setShowDocUpload]   = useState(false);
+  const [docUploadTarget, setDocUploadTarget] = useState<'ticket' | 'boardingPass' | 'general'>('general');
   const [docLabel, setDocLabel]             = useState('');
   const [docSublabel, setDocSublabel]       = useState('');
   const [docCategory, setDocCategory]       = useState<DocCategory>('flight');
@@ -348,7 +350,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
       phone: ev.phone ?? '', email: ev.email ?? '',
       mapUrl: ev.mapUrl ?? '', docLabel: ev.docLabel ?? '',
       transportMode: ev.transportMode ?? '', ticketBooked: ev.ticketBooked ?? null,
-      estimatedPrice: ev.estimatedPrice ?? '',
+      estimatedPrice: ev.estimatedPrice ?? '', boardingPassDocLabel: ev.boardingPassDocLabel ?? '',
     });
     setShowForm(true);
   }
@@ -400,7 +402,11 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
     if (dbErr) { setDocUploadError(dbErr.message); setDocUploading(false); return; }
     const newLabel = docLabel.trim();
     setDocLabels(prev => [...prev, newLabel]);
-    setDraft(d => ({ ...d, docLabel: newLabel }));
+    if (docUploadTarget === 'boardingPass') {
+      setDraft(d => ({ ...d, boardingPassDocLabel: newLabel }));
+    } else {
+      setDraft(d => ({ ...d, docLabel: newLabel }));
+    }
     setDocLabel(''); setDocSublabel(''); setDocCategory('flight');
     if (docFileRef.current) docFileRef.current.value = '';
     setShowDocUpload(false);
@@ -412,6 +418,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
     setEditing(null);
     setDraft(BLANK_EVENT());
     setShowDocUpload(false);
+    setDocUploadTarget('general');
     setDocLabel(''); setDocSublabel(''); setDocCategory('flight'); setDocUploadError('');
     if (docFileRef.current) docFileRef.current.value = '';
   }
@@ -436,6 +443,8 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
       ticketBooked: isTransport && draft.ticketBooked !== null ? draft.ticketBooked : undefined,
       estimatedPrice: (isTransport && draft.ticketBooked === false && draft.estimatedPrice.trim())
         ? draft.estimatedPrice.trim() : undefined,
+      boardingPassDocLabel: (isTransport && draft.transportMode === 'flight' && draft.boardingPassDocLabel.trim())
+        ? draft.boardingPassDocLabel.trim() : undefined,
     };
     const next = allDays.map(d => {
       if (d.day !== activeDay.day) return d;
@@ -654,6 +663,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
           day={activeDay}
           onlyOpen={false}
           onOpenDoc={onOpenDoc}
+          onOpenBoardingPass={onOpenDoc}
           onEditEvent={openEdit}
           onDeleteEvent={handleDeleteEvent}
         />
@@ -840,7 +850,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
                         type="button"
                         onClick={() => {
                           setDraft(d => ({ ...d, ticketBooked: val }));
-                          if (val) setShowDocUpload(true);
+                          if (!val) { setShowDocUpload(false); setDocUploadError(''); }
                         }}
                         style={{
                           fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
@@ -872,12 +882,75 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
                 </div>
               )}
 
-              {/* Ticket booked note */}
-              {draft.ticketBooked === true && (
-                <p style={{ margin: 0, fontSize: 12, color: 'var(--t-muted)', lineHeight: 1.5 }}>
-                  Use the <strong style={{ color: 'var(--t-fg)' }}>Attach document</strong> section below to upload your ticket.
-                </p>
-              )}
+              {/* Doc slots when ticket is booked */}
+              {draft.ticketBooked === true && (() => {
+                const slots: { key: 'ticket' | 'boardingPass'; label: string; icon: string; docField: 'docLabel' | 'boardingPassDocLabel' }[] = [
+                  { key: 'ticket', label: 'Ticket', icon: '🎫', docField: 'docLabel' },
+                  ...(draft.transportMode === 'flight'
+                    ? [{ key: 'boardingPass' as const, label: 'Boarding Pass', icon: '🛫', docField: 'boardingPassDocLabel' as const }]
+                    : []),
+                ];
+                return slots.map(slot => {
+                  const attached = draft[slot.docField];
+                  const isUploadingThis = showDocUpload && docUploadTarget === slot.key;
+                  return (
+                    <div key={slot.key} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <label style={LBL}>{slot.icon} {slot.label}</label>
+                        {!attached && !isUploadingThis && (
+                          <button type="button"
+                            onClick={() => { setDocUploadTarget(slot.key); setShowDocUpload(true); setDocUploadError(''); }}
+                            style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--t-gold)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                          >+ Upload</button>
+                        )}
+                        {isUploadingThis && (
+                          <button type="button"
+                            onClick={() => { setShowDocUpload(false); setDocUploadError(''); }}
+                            style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--t-muted)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                          >× Cancel</button>
+                        )}
+                      </div>
+                      {attached ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--t-w04)', border: '1px solid var(--t-w10)', borderRadius: 3, padding: '7px 10px' }}>
+                          <span style={{ fontSize: 12, color: 'var(--t-fg)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{attached}</span>
+                          <button type="button" onClick={() => setDraft(d => ({ ...d, [slot.docField]: '' }))}
+                            style={{ background: 'none', border: 'none', color: 'var(--t-muted)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }}>×</button>
+                        </div>
+                      ) : isUploadingThis ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--t-w03)', border: '1px solid var(--t-w10)', borderRadius: 4, padding: 12 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <label style={LBL}>Label *</label>
+                            <input type="text" value={docLabel} onChange={e => setDocLabel(e.target.value)} placeholder={slot.key === 'boardingPass' ? 'e.g. IndiGo 6E 634 — Boarding Pass' : 'e.g. IndiGo 6E 634 — Kolkata → Goa'} style={INPUT()} />
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <label style={LBL}>Sublabel</label>
+                            <input type="text" value={docSublabel} onChange={e => setDocSublabel(e.target.value)} placeholder={slot.key === 'boardingPass' ? 'e.g. 14 Sep · Seat 24A' : 'e.g. 14 Sep · Ticket'} style={INPUT()} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <label style={LBL}>Category</label>
+                              <select value={docCategory} onChange={e => setDocCategory(e.target.value as DocCategory)} style={{ ...INPUT(), padding: '7px 10px' }}>
+                                {DOC_CATEGORIES.map(cat => <option key={cat} value={cat}>{DOC_CATEGORY_ICON[cat]} {DOC_CATEGORY_LABELS[cat]}</option>)}
+                              </select>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <label style={LBL}>File *</label>
+                              <input ref={docFileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" style={{ ...INPUT(), padding: '6px 10px', fontSize: 11, color: 'var(--t-muted)' }} />
+                            </div>
+                          </div>
+                          {docUploadError && <p style={{ margin: 0, fontSize: 11, color: '#e07070' }}>{docUploadError}</p>}
+                          <button type="button" onClick={handleDocUpload} disabled={docUploading}
+                            style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: docUploading ? 'var(--t-muted)' : 'var(--t-bg)', background: docUploading ? 'var(--t-gold-20)' : 'var(--t-gold)', border: 'none', borderRadius: 3, padding: '8px 14px', cursor: docUploading ? 'not-allowed' : 'pointer', alignSelf: 'flex-end' }}>
+                            {docUploading ? 'Uploading…' : '↑ Upload & attach'}
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 12, color: 'var(--t-muted)', fontStyle: 'italic' }}>No {slot.label.toLowerCase()} attached</div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           )}
 
@@ -911,13 +984,14 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
             <input type="url" placeholder="https://maps.google.com/..." value={draft.mapUrl} onChange={e => setDraft(d => ({ ...d, mapUrl: e.target.value }))} style={INPUT()} />
           </div>
 
-          {/* Doc picker */}
+          {/* Doc picker — hidden for transport events (handled inside transport section) */}
+          {!draft.categories.includes('transport') && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <label style={LBL}>Attach document</label>
               <button
                 type="button"
-                onClick={() => { setShowDocUpload(v => !v); setDocUploadError(''); }}
+                onClick={() => { setDocUploadTarget('general'); setShowDocUpload(v => !v); setDocUploadError(''); }}
                 style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: showDocUpload ? 'var(--t-muted)' : 'var(--t-gold)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
               >
                 {showDocUpload ? '× Cancel' : '+ Upload new'}
@@ -965,6 +1039,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
               </select>
             )}
           </div>
+          )}
 
           {/* Tag/Cost + Status */}
           <div className="grid grid-cols-1 sm:grid-cols-[1fr_130px] gap-[12px]">

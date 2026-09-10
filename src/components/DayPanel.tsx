@@ -17,11 +17,12 @@ interface Props {
   day: DayData;
   onlyOpen: boolean;
   onOpenDoc?: (label: string) => void;
+  onOpenBoardingPass?: (label: string) => void;
   onEditEvent?: (ev: EventItem) => void;
   onDeleteEvent?: (evId: string) => void;
 }
 
-export default function DayPanel({ day, onlyOpen, onOpenDoc, onEditEvent, onDeleteEvent }: Props) {
+export default function DayPanel({ day, onlyOpen, onOpenDoc, onOpenBoardingPass, onEditEvent, onDeleteEvent }: Props) {
   const openCount = day.events.filter(e => e.tagVariant === 'pending').length;
   const confirmedCount = day.events.length - openCount;
   const sorted = [...day.events].sort((a, b) => parseTime(a.time) - parseTime(b.time));
@@ -67,6 +68,7 @@ export default function DayPanel({ day, onlyOpen, onOpenDoc, onEditEvent, onDele
             event={ev}
             hideIfSettled={onlyOpen}
             onOpenDoc={onOpenDoc}
+            onOpenBoardingPass={onOpenBoardingPass}
             onEdit={onEditEvent ? () => onEditEvent(ev) : undefined}
             onDelete={onDeleteEvent && ev.id ? () => onDeleteEvent(ev.id!) : undefined}
           />

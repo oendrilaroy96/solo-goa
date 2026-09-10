@@ -70,6 +70,7 @@ export interface EventItem {
   transportMode?: TransportMode;
   ticketBooked?: boolean;
   estimatedPrice?: string;
+  boardingPassDocLabel?: string;
 }
 
 export interface DayData {

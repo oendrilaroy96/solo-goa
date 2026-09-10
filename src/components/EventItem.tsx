@@ -1,3 +1,4 @@
+import React from 'react';
 import type { EventItem as EventData } from '../data/itinerary';
 import { CATEGORY_ICON, CATEGORY_LABEL } from '../data/itinerary';
 import Tag from './Tag';
@@ -6,6 +7,7 @@ interface Props {
   event: EventData;
   hideIfSettled?: boolean;
   onOpenDoc?: (label: string) => void;
+  onOpenBoardingPass?: (label: string) => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -72,32 +74,42 @@ function ContactLinks({ event, small }: { event: EventData; small?: boolean }) {
 
 // ── main component ───────────────────────────────────────────────────────────
 
-export default function EventItem({ event, hideIfSettled, onOpenDoc, onEdit, onDelete }: Props) {
+const DOC_BTN_STYLE: React.CSSProperties = {
+  fontFamily: 'var(--font-mono)',
+  fontSize: 10,
+  color: 'var(--t-gold)',
+  background: 'var(--t-gold-08)',
+  border: '1px solid var(--t-gold-25)',
+  borderRadius: 3,
+  padding: '3px 8px',
+  cursor: 'pointer',
+  flexShrink: 0,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 4,
+};
+
+export default function EventItem({ event, hideIfSettled, onOpenDoc, onOpenBoardingPass, onEdit, onDelete }: Props) {
   const isSettled = event.tagVariant !== 'pending';
   if (hideIfSettled && isSettled) return null;
 
   const hasHtml = event.description.includes('<');
+  const isTransport = event.categories?.includes('transport');
 
-  const docBtn = event.docLabel && onOpenDoc ? (
-    <button
-      type="button"
-      onClick={() => onOpenDoc(event.docLabel!)}
-      title="View document"
-      style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: 10,
-        color: 'var(--t-gold)',
-        background: 'var(--t-gold-08)',
-        border: '1px solid var(--t-gold-25)',
-        borderRadius: 3,
-        padding: '3px 7px',
-        cursor: 'pointer',
-        flexShrink: 0,
-      }}
-    >
-      📄
-    </button>
-  ) : null;
+  const docBtns = (
+    <>
+      {event.docLabel && onOpenDoc && (
+        <button type="button" onClick={() => onOpenDoc(event.docLabel!)} title="View ticket / document" style={DOC_BTN_STYLE}>
+          🎫 {isTransport ? 'Ticket' : 'Doc'}
+        </button>
+      )}
+      {event.boardingPassDocLabel && onOpenBoardingPass && (
+        <button type="button" onClick={() => onOpenBoardingPass(event.boardingPassDocLabel!)} title="View boarding pass" style={DOC_BTN_STYLE}>
+          🛫 Boarding Pass
+        </button>
+      )}
+    </>
+  );
 
   return (
     <article
@@ -130,7 +142,7 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onEdit, onD
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Tag label={event.tag} variant={event.tagVariant} />
-          {docBtn}
+          {docBtns}
           {onEdit && (
             <button type="button" onClick={onEdit} title="Edit" style={{ background: 'none', border: 'none', color: 'var(--t-muted)', cursor: 'pointer', fontSize: 13, padding: '2px 4px', lineHeight: 1 }}>✏</button>
           )}
@@ -162,7 +174,7 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onEdit, onD
         <ContactLinks event={event} small />
         <div className="mt-1.5 flex items-center gap-2">
           <Tag label={event.tag} variant={event.tagVariant} />
-          {docBtn}
+          {docBtns}
         </div>
       </div>
     </article>
