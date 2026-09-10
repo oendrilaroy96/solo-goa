@@ -69,6 +69,9 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
   const [form, setForm]               = useState(BLANK_FORM());
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [savingName, setSavingName] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
   // Close profile dropdown on outside click
@@ -275,7 +278,11 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                     <div style={{ padding: '6px 0' }}>
                       <button
                         type="button"
-                        onClick={() => setShowProfileMenu(false)}
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          setEditName(user.user_metadata?.full_name ?? '');
+                          setShowAccountModal(true);
+                        }}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 10,
                           width: '100%', textAlign: 'left',
@@ -728,5 +735,90 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
         )}
       </div>
     </div>
+
+    {/* ── My Account modal ── */}
+    {showAccountModal && (
+      <div
+        style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+        onClick={() => setShowAccountModal(false)}
+      >
+        <div
+          className="luxury-card"
+          style={{ width: '100%', maxWidth: 420, padding: 'clamp(20px,5vw,32px)' }}
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 20, color: 'var(--t-fg)', margin: 0 }}>
+              My account
+            </h2>
+            <button type="button" onClick={() => setShowAccountModal(false)} style={{ background: 'none', border: 'none', color: 'var(--t-muted)', fontSize: 22, cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}>×</button>
+          </div>
+
+          {/* Avatar */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: '50%',
+              background: 'var(--t-gold-20)', border: '2px solid var(--t-gold-30)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'var(--font-mono)', fontSize: 24, fontWeight: 700,
+              color: 'var(--t-gold)', textTransform: 'uppercase',
+            }}>
+              {(user.user_metadata?.full_name?.[0] ?? user.email?.[0] ?? '?')}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Name field */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Full name
+              </label>
+              <input
+                type="text"
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                style={{ background: 'var(--t-bg)', border: '1px solid var(--t-w12)', borderRadius: 2, padding: '9px 12px', color: 'var(--t-fg)', fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            {/* Email (read-only) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Email address
+              </label>
+              <div style={{ background: 'var(--t-w04)', border: '1px solid var(--t-w08)', borderRadius: 2, padding: '9px 12px', color: 'var(--t-muted)', fontSize: 13 }}>
+                {user.email}
+              </div>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted-35)' }}>
+                Email cannot be changed
+              </span>
+            </div>
+
+            {/* Save */}
+            <button
+              type="button"
+              disabled={savingName || !editName.trim() || editName.trim() === user.user_metadata?.full_name}
+              onClick={async () => {
+                setSavingName(true);
+                await supabase.auth.updateUser({ data: { full_name: editName.trim() } });
+                setSavingName(false);
+                setShowAccountModal(false);
+              }}
+              style={{
+                fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
+                textTransform: 'uppercase', letterSpacing: '0.08em',
+                color: savingName ? 'var(--t-muted)' : 'var(--t-bg)',
+                background: savingName ? 'var(--t-gold-20)' : 'var(--t-gold)',
+                border: 'none', borderRadius: 3, padding: '10px 20px',
+                cursor: savingName ? 'not-allowed' : 'pointer', marginTop: 4,
+              }}
+            >
+              {savingName ? 'Saving…' : 'Save changes'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   );
 }
