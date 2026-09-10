@@ -318,7 +318,11 @@ export default function EditTripModal({ trip, onClose, onSave }: Props) {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {TRIP_TYPES.map(tt => (
                   <button key={tt.value} type="button"
-                    onClick={() => setForm(f => ({ ...f, trip_type: f.trip_type === tt.value ? '' : tt.value }))}
+                    onClick={() => setForm(f => {
+                      const newType = f.trip_type === tt.value ? '' as TripType | '' : tt.value;
+                      const autoCount = newType === 'solo' ? 1 : newType === 'couple' ? 2 : f.people_count;
+                      return { ...f, trip_type: newType, people_count: autoCount ?? 1 };
+                    })}
                     style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, padding: '6px 12px', borderRadius: 3, cursor: 'pointer', letterSpacing: '0.06em', color: form.trip_type === tt.value ? 'var(--t-gold)' : 'var(--t-muted)', background: form.trip_type === tt.value ? 'var(--t-gold-08)' : 'var(--t-w04)', border: form.trip_type === tt.value ? '1px solid var(--t-gold-30)' : '1px solid var(--t-w10)' }}>
                     {tt.icon} {tt.label}
                   </button>

@@ -678,7 +678,11 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                       <button
                         key={tt.value}
                         type="button"
-                        onClick={() => setForm(f => ({ ...f, trip_type: f.trip_type === tt.value ? '' : tt.value }))}
+                        onClick={() => setForm(f => {
+                          const newType = f.trip_type === tt.value ? '' as TripType | '' : tt.value;
+                          const autoCount = newType === 'solo' ? 1 : newType === 'couple' ? 2 : f.people_count;
+                          return { ...f, trip_type: newType, people_count: autoCount ?? 1 };
+                        })}
                         style={{
                           fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
                           padding: '6px 12px', borderRadius: 3, cursor: 'pointer', letterSpacing: '0.06em',
