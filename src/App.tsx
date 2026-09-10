@@ -65,22 +65,29 @@ export default function App() {
 
   // Auth state
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      // Accept any pending invites for this email on login
-      if (data.session?.user.email) {
-        supabase.from('trip_invites')
-          .update({ accepted_at: new Date().toISOString(), accepted_by: data.session.user.id })
-          .eq('invited_email', data.session.user.email)
-          .is('accepted_at', null)
-          .then(() => { /* fire-and-forget */ });
-      }
-    });
+    // If the URL hash contains a magic-link token, let onAuthStateChange handle it
+    // rather than resolving to null from getSession() before the hash is processed
+    const hasAuthHash = window.location.hash.includes('access_token');
+
+    if (!hasAuthHash) {
+      supabase.auth.getSession().then(({ data }) => {
+        setSession(data.session);
+        if (data.session?.user.email) {
+          supabase.from('trip_invites')
+            .update({ accepted_at: new Date().toISOString(), accepted_by: data.session.user.id })
+            .eq('invited_email', data.session.user.email)
+            .is('accepted_at', null)
+            .then(() => { /* fire-and-forget */ });
+        }
+      });
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
-      if (!s) setTrip(null); // clear trip on sign out
-      // Accept pending invites on every sign-in
-      if (s?.user.email) {
+      if (!s) { setTrip(null); return; }
+      // Clear the hash from the URL after magic link login
+      if (hasAuthHash) window.history.replaceState(null, '', window.location.pathname);
+      if (s.user.email) {
         supabase.from('trip_invites')
           .update({ accepted_at: new Date().toISOString(), accepted_by: s.user.id })
           .eq('invited_email', s.user.email)
