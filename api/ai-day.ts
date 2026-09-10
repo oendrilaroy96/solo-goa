@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!apiKey) return res.status(500).json({ error: 'AI not configured — set GEMINI_API_KEY in Vercel env vars' });
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 
   const prompt = `You are a travel itinerary assistant. The trip is to ${destination || 'the destination'} on ${dateLabel || 'a travel day'}.
 
