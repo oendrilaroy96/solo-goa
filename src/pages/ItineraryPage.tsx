@@ -688,12 +688,14 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
               <textarea
                 value={aiDescription}
                 onChange={e => setAiDescription(e.target.value)}
+                disabled={aiLoading}
                 placeholder={`e.g. "I want to explore Velha Goa — old churches, local lunch, and a relaxed evening by the river"`}
                 rows={3}
                 style={{
-                  background: 'var(--t-bg)', border: '1px solid var(--t-w12)', borderRadius: 2,
-                  padding: '10px 12px', color: 'var(--t-fg)', fontSize: 13, outline: 'none',
-                  width: '100%', boxSizing: 'border-box', resize: 'vertical', lineHeight: 1.6,
+                  background: aiLoading ? 'var(--t-w04)' : 'var(--t-bg)', border: '1px solid var(--t-w12)', borderRadius: 2,
+                  padding: '10px 12px', color: aiLoading ? 'var(--t-muted)' : 'var(--t-fg)', fontSize: 13, outline: 'none',
+                  width: '100%', boxSizing: 'border-box', resize: aiLoading ? 'none' : 'vertical', lineHeight: 1.6,
+                  cursor: aiLoading ? 'not-allowed' : 'auto',
                 }}
               />
               {aiError && <p style={{ margin: 0, fontSize: 12, color: '#e07070' }}>{aiError}</p>}
