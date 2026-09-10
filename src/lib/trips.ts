@@ -12,6 +12,10 @@ export interface Trip {
   cover_image?: string;
   trip_type?: TripType;
   people_count?: number;
+  geo_country?: string;
+  geo_country_code?: string;
+  geo_state?: string;
+  geo_city?: string;
   created_at: string;
 }
 
