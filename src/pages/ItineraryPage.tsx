@@ -4,6 +4,32 @@ import { EVENT_CATEGORIES, CATEGORY_ICON, CATEGORY_LABEL } from '../data/itinera
 import DayPanel from '../components/DayPanel';
 import { loadItinerary, saveItinerary, newEventId, newDayId } from '../lib/itinerary-store';
 import { supabase } from '../lib/supabase';
+import type { Trip } from '../lib/trips';
+
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONTHS   = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function generateDaysFromTrip(trip: Trip): DayData[] {
+  if (!trip.date_from || !trip.date_to) return [];
+  const start = new Date(trip.date_from + 'T00:00:00');
+  const end   = new Date(trip.date_to   + 'T00:00:00');
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return [];
+  const days: DayData[] = [];
+  for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const dayNum  = String(d.getDate());
+    const weekday = WEEKDAYS[d.getDay()];
+    const month   = MONTHS[d.getMonth()];
+    days.push({
+      id: newDayId(dayNum),
+      day: dayNum,
+      weekday,
+      subtitle: `${weekday}, ${dayNum} ${month}`,
+      weather: '',
+      events: [],
+    });
+  }
+  return days;
+}
 
 // ─── time overlap helpers ─────────────────────────────────────────────────────
 
@@ -136,11 +162,12 @@ function stripHtml(html: string): string {
 // ─── component ────────────────────────────────────────────────────────────────
 
 interface Props {
-  tripId: string;
+  trip: Trip;
   onOpenDoc?: (label: string) => void;
 }
 
-export default function ItineraryPage({ tripId, onOpenDoc }: Props) {
+export default function ItineraryPage({ trip, onOpenDoc }: Props) {
+  const tripId = trip.id;
   const [allDays, setAllDays]         = useState<DayData[]>([]);
   const [loading, setLoading]         = useState(true);
   const [selectedDay, setSelectedDay] = useState(getStoredDay);
@@ -159,7 +186,21 @@ export default function ItineraryPage({ tripId, onOpenDoc }: Props) {
   // ── load ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    loadItinerary(tripId).then(days => { setAllDays(days); setLoading(false); });
+    loadItinerary(tripId).then(async days => {
+      if (days.length === 0) {
+        const generated = generateDaysFromTrip(trip);
+        if (generated.length > 0) {
+          await saveItinerary(tripId, generated);
+          setAllDays(generated);
+          setSelectedDay(generated[0].day);
+        } else {
+          setAllDays([]);
+        }
+      } else {
+        setAllDays(days);
+      }
+      setLoading(false);
+    });
     supabase.from('documents').select('*').eq('itinerary_id', tripId).order('label').then(({ data, error }) => {
       if (error) console.error('docs fetch:', error);
       if (data) setDocLabels((data as { label: string }[]).map(d => d.label));
