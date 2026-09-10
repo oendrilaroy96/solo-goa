@@ -16,6 +16,7 @@ function useTheme() {
 import { supabase } from './lib/supabase';
 import { signOut } from './lib/auth';
 import EditTripModal from './components/EditTripModal';
+import ShareTripModal from './components/ShareTripModal';
 import ItineraryPage from './pages/ItineraryPage';
 import BudgetPage from './pages/BudgetPage';
 import StaysPage from './pages/StaysPage';
@@ -57,7 +58,8 @@ export default function App() {
   const [paidTotal, setPaidTotal]   = useState<number>(0);
   const [estTotal,  setEstTotal]    = useState<number>(0);
   const [autoOpenDoc, setAutoOpenDoc] = useState<string | null>(null);
-  const [showEditTrip, setShowEditTrip] = useState(false);
+  const [showEditTrip, setShowEditTrip]   = useState(false);
+  const [showShareTrip, setShowShareTrip] = useState(false);
   const { theme, toggle } = useTheme();
   const handleTotalsChange = useCallback((paid: number, est: number) => { setPaidTotal(paid); setEstTotal(est); }, []);
 
@@ -65,10 +67,26 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
+      // Accept any pending invites for this email on login
+      if (data.session?.user.email) {
+        supabase.from('trip_invites')
+          .update({ accepted_at: new Date().toISOString(), accepted_by: data.session.user.id })
+          .eq('invited_email', data.session.user.email)
+          .is('accepted_at', null)
+          .then(() => { /* fire-and-forget */ });
+      }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       if (!s) setTrip(null); // clear trip on sign out
+      // Accept pending invites on every sign-in
+      if (s?.user.email) {
+        supabase.from('trip_invites')
+          .update({ accepted_at: new Date().toISOString(), accepted_by: s.user.id })
+          .eq('invited_email', s.user.email)
+          .is('accepted_at', null)
+          .then(() => { /* fire-and-forget */ });
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -172,6 +190,14 @@ export default function App() {
                 title="Edit trip details"
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--t-muted)', padding: '2px 4px', lineHeight: 1, flexShrink: 0 }}
               >✏</button>
+              {(trip.people_count ?? 1) > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setShowShareTrip(true)}
+                  title="Share & collaborate"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--t-muted)', padding: '2px 4px', lineHeight: 1, flexShrink: 0 }}
+                >🔗</button>
+              )}
             </div>
             <button
               type="button"
@@ -216,6 +242,30 @@ export default function App() {
           </button>
 
           <div className="gold-line" />
+
+          {/* Collaborate nudge — shown when trip has >1 person */}
+          {(trip.people_count ?? 1) > 1 && (
+            <button
+              type="button"
+              onClick={() => setShowShareTrip(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                marginTop: 10, width: '100%',
+                background: 'var(--t-gold-08)', border: '1px solid var(--t-gold-20)',
+                borderRadius: 3, padding: '7px 10px', cursor: 'pointer', textAlign: 'left',
+              }}
+            >
+              <span style={{ fontSize: 14 }}>🔗</span>
+              <div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 600, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Collaborate
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--t-muted)', marginTop: 1 }}>
+                  Invite your co-travellers
+                </div>
+              </div>
+            </button>
+          )}
         </div>
 
         {/* Nav */}
@@ -373,6 +423,14 @@ export default function App() {
           trip={trip}
           onClose={() => setShowEditTrip(false)}
           onSave={updated => { setTrip(updated); setShowEditTrip(false); }}
+        />
+      )}
+
+      {/* ── Share trip modal ── */}
+      {showShareTrip && (
+        <ShareTripModal
+          trip={trip}
+          onClose={() => setShowShareTrip(false)}
         />
       )}
 
