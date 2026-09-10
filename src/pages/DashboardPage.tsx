@@ -884,7 +884,7 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
             {/* Cover + name */}
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flexShrink: 0 }}>
-                <label style={inputStyle}>Cover</label>
+                <label style={labelStyle}>Cover</label>
                 <div style={{ width: 56, height: 40, borderRadius: 4, border: '1px solid var(--t-w12)', background: 'var(--t-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: 28 }}>
                   {editForm.cover_image
                     ? <img src={editForm.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -892,14 +892,14 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1 }}>
-                <label style={inputStyle}>Trip name *</label>
+                <label style={labelStyle}>Trip name *</label>
                 <input type="text" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} required style={{ background: 'var(--t-bg)', border: '1px solid var(--t-w12)', borderRadius: 2, padding: '9px 12px', color: 'var(--t-fg)', fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }} />
               </div>
             </div>
 
             {/* Destination */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5, position: 'relative' }}>
-              <label style={inputStyle}>Destination</label>
+              <label style={labelStyle}>Destination</label>
               <input
                 type="text"
                 value={editLocQuery}
@@ -953,7 +953,7 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
             {/* Trip type + people */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'end' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                <label style={inputStyle}>Trip type</label>
+                <label style={labelStyle}>Trip type</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {TRIP_TYPES.map(tt => (
                     <button key={tt.value} type="button"
@@ -964,7 +964,7 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                <label style={inputStyle}>People</label>
+                <label style={labelStyle}>People</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <button type="button" onClick={() => setEditForm(f => ({ ...f, people_count: Math.max(1, (f.people_count ?? 1) - 1) }))} style={{ width: 32, height: 38, fontSize: 18, border: '1px solid var(--t-w12)', borderRadius: 3, background: 'var(--t-bg)', color: 'var(--t-fg)', cursor: 'pointer' }}>−</button>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: 'var(--t-fg)', minWidth: 28, textAlign: 'center' }}>{editForm.people_count}</span>
@@ -976,11 +976,11 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
             {/* Dates */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px]">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                <label style={inputStyle}>From</label>
+                <label style={labelStyle}>From</label>
                 <input type="date" value={editForm.date_from} onChange={e => setEditForm(f => ({ ...f, date_from: e.target.value }))} style={{ background: 'var(--t-bg)', border: '1px solid var(--t-w12)', borderRadius: 2, padding: '9px 12px', color: 'var(--t-fg)', fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const, colorScheme: 'dark' }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                <label style={inputStyle}>To</label>
+                <label style={labelStyle}>To</label>
                 <input type="date" value={editForm.date_to} min={editForm.date_from} onChange={e => setEditForm(f => ({ ...f, date_to: e.target.value }))} style={{ background: 'var(--t-bg)', border: '1px solid var(--t-w12)', borderRadius: 2, padding: '9px 12px', color: 'var(--t-fg)', fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const, colorScheme: 'dark' }} />
               </div>
             </div>
