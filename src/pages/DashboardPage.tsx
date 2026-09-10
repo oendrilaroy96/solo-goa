@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { listTrips, createTrip, deleteTrip } from '../lib/trips';
 import type { Trip, TripType } from '../lib/trips';
 import { supabase } from '../lib/supabase';
+import type { User } from '@supabase/supabase-js';
 
 // ── Trip type options ───────────────────────────────────────────────────────
 const TRIP_TYPES: { value: TripType; label: string; icon: string }[] = [
@@ -53,10 +54,14 @@ interface LocationSuggestion {
 }
 
 interface Props {
+  user: User;
   onSelectTrip: (trip: Trip) => void;
+  onSignOut: () => void;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
 }
 
-export default function DashboardPage({ onSelectTrip }: Props) {
+export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, onToggleTheme }: Props) {
   const [trips, setTrips]             = useState<Trip[]>([]);
   const [loading, setLoading]         = useState(true);
   const [showForm, setShowForm]       = useState(false);
@@ -189,15 +194,45 @@ export default function DashboardPage({ onSelectTrip }: Props) {
 
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-            <img src="/favicon.png" width={36} height={36} alt="" />
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--t-gold)',
-              textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 600,
-            }}>
-              TripTinker
-            </span>
+          {/* Top bar: logo + profile */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <img src="/favicon.png" width={32} height={32} alt="" />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 600 }}>
+                TripTinker
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Theme toggle */}
+              <button type="button" onClick={onToggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+                style={{ background: 'var(--t-w04)', border: '1px solid var(--t-w10)', borderRadius: 20, padding: '5px 9px', cursor: 'pointer', fontSize: 13, lineHeight: 1, color: 'var(--t-muted)' }}>
+                {theme === 'dark' ? '☀' : '🌙'}
+              </button>
+              {/* Avatar + email */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                  background: 'var(--t-gold-20)', border: '1px solid var(--t-gold-30)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--t-gold)',
+                  textTransform: 'uppercase',
+                }}>
+                  {user.email?.[0] ?? '?'}
+                </div>
+                <div className="hidden sm:block" style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t-fg)', fontWeight: 600, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                    {user.email}
+                  </span>
+                </div>
+              </div>
+              {/* Sign out */}
+              <button type="button" onClick={onSignOut}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--t-muted)', background: 'transparent', border: '1px solid var(--t-w10)', borderRadius: 3, padding: '6px 10px', cursor: 'pointer' }}>
+                Sign out
+              </button>
+            </div>
           </div>
+
           <div className="gold-line" />
           <div style={{ marginTop: 24, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>

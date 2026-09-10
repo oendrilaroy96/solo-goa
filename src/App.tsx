@@ -124,47 +124,13 @@ export default function App() {
   // Logged in but no trip selected
   if (!trip) {
     return (
-      <>
-        <div style={{ position: 'fixed', top: 12, right: 12, zIndex: 50, display: 'flex', gap: 6, alignItems: 'center' }}>
-          <button
-            type="button"
-            onClick={toggle}
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            style={{
-              background: 'var(--t-card)',
-              border: '1px solid var(--t-w12)',
-              borderRadius: 20,
-              padding: '6px 10px',
-              cursor: 'pointer',
-              fontSize: 14,
-              lineHeight: 1,
-              color: 'var(--t-muted)',
-            }}
-          >
-            {theme === 'dark' ? '☀' : '🌙'}
-          </button>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 10,
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: 'var(--t-muted)',
-              background: 'transparent',
-              border: '1px solid var(--t-w10)',
-              borderRadius: 3,
-              padding: '6px 12px',
-              cursor: 'pointer',
-            }}
-          >
-            Sign out
-          </button>
-        </div>
-        <DashboardPage onSelectTrip={handleSelectTrip} />
-      </>
+      <DashboardPage
+        user={session.user}
+        onSelectTrip={handleSelectTrip}
+        onSignOut={handleSignOut}
+        theme={theme}
+        onToggleTheme={toggle}
+      />
     );
   }
 
