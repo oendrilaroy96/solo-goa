@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const VALID_CATEGORIES = [
   'restaurant', 'cafe', 'bar', 'gallery', 'museum', 'heritage',
@@ -12,18 +12,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { description, destination, dateLabel } = (req.body ?? {}) as Record<string, string>;
   if (!description?.trim()) return res.status(400).json({ error: 'description is required' });
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'AI not configured — set ANTHROPIC_API_KEY in Vercel env vars' });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'AI not configured — set GEMINI_API_KEY in Vercel env vars' });
 
-  const client = new Anthropic({ apiKey });
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-  try {
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
-      messages: [{
-        role: 'user',
-        content: `You are a travel itinerary assistant. The trip is to ${destination || 'the destination'} on ${dateLabel || 'a travel day'}.
+  const prompt = `You are a travel itinerary assistant. The trip is to ${destination || 'the destination'} on ${dateLabel || 'a travel day'}.
 
 The traveller wants: "${description.trim()}"
 
@@ -36,18 +31,18 @@ Rules:
 - tagVariant must be one of: default, pending, free
 - tag is an optional cost string like "₹500" or "Free" — or empty ""
 - times in "H:MM AM/PM" format, spaced realistically (30–90 min per stop)
-- description should be practical and helpful, not generic`,
-      }],
-    });
+- description should be practical and helpful, not generic`;
 
-    const raw = (message.content[0] as { type: string; text: string }).text.trim();
+  try {
+    const result = await model.generateContent(prompt);
+    const raw = result.response.text().trim();
+
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return res.status(500).json({ error: 'Could not parse AI response' });
 
     const parsed = JSON.parse(jsonMatch[0]) as { events: unknown[] };
     if (!Array.isArray(parsed.events)) return res.status(500).json({ error: 'Unexpected AI response shape' });
 
-    // Sanitise each event
     const events = parsed.events.map((e: unknown) => {
       const ev = e as Record<string, unknown>;
       return {
