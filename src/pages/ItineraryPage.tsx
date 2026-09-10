@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import type { DayData, EventItem, TagVariant, EventCategory } from '../data/itinerary';
 import { EVENT_CATEGORIES, CATEGORY_ICON, CATEGORY_LABEL } from '../data/itinerary';
+import type { DocCategory } from '../data/documents';
+import { CATEGORY_LABELS as DOC_CATEGORY_LABELS, CATEGORY_ICON as DOC_CATEGORY_ICON } from '../data/documents';
 import DayPanel from '../components/DayPanel';
 import { loadItinerary, saveItinerary, newEventId, newDayId } from '../lib/itinerary-store';
 import { supabase } from '../lib/supabase';
 import type { Trip } from '../lib/trips';
 import { updateTrip } from '../lib/trips';
 import { fetchTripWeather } from '../lib/weather';
+
+const DOC_CATEGORIES: DocCategory[] = ['flight', 'train', 'hotel', 'cab', 'activity', 'payment'];
 
 function localDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -190,6 +194,15 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
   const [showDayForm, setShowDayForm] = useState(false);
   const [dayDraft, setDayDraft]       = useState<DayDraft>(BLANK_DAY());
 
+  // inline doc upload (inside event form)
+  const [showDocUpload, setShowDocUpload]   = useState(false);
+  const [docLabel, setDocLabel]             = useState('');
+  const [docSublabel, setDocSublabel]       = useState('');
+  const [docCategory, setDocCategory]       = useState<DocCategory>('flight');
+  const [docUploading, setDocUploading]     = useState(false);
+  const [docUploadError, setDocUploadError] = useState('');
+  const docFileRef = useRef<HTMLInputElement>(null);
+
   // ── load ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -327,10 +340,37 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
     setShowForm(true);
   }
 
+  async function handleDocUpload() {
+    const file = docFileRef.current?.files?.[0];
+    if (!file || !docLabel.trim()) { setDocUploadError('Choose a file and enter a label.'); return; }
+    setDocUploadError('');
+    setDocUploading(true);
+    const ext      = file.name.split('.').pop() ?? 'bin';
+    const slug     = docLabel.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const filename = `${Date.now()}-${slug}.${ext}`;
+    const { error: upErr } = await supabase.storage.from('docs').upload(filename, file, { upsert: false });
+    if (upErr) { setDocUploadError(upErr.message); setDocUploading(false); return; }
+    const { error: dbErr } = await supabase.from('documents').insert({
+      label: docLabel.trim(), sublabel: docSublabel.trim(),
+      category: docCategory, filename, itinerary_id: tripId,
+    });
+    if (dbErr) { setDocUploadError(dbErr.message); setDocUploading(false); return; }
+    const newLabel = docLabel.trim();
+    setDocLabels(prev => [...prev, newLabel]);
+    setDraft(d => ({ ...d, docLabel: newLabel }));
+    setDocLabel(''); setDocSublabel(''); setDocCategory('flight');
+    if (docFileRef.current) docFileRef.current.value = '';
+    setShowDocUpload(false);
+    setDocUploading(false);
+  }
+
   function cancelEvent() {
     setShowForm(false);
     setEditing(null);
     setDraft(BLANK_EVENT());
+    setShowDocUpload(false);
+    setDocLabel(''); setDocSublabel(''); setDocCategory('flight'); setDocUploadError('');
+    if (docFileRef.current) docFileRef.current.value = '';
   }
 
   async function commitEvent() {
@@ -699,16 +739,58 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
           </div>
 
           {/* Doc picker */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={LBL}>Attach document</label>
-            <select
-              value={draft.docLabel}
-              onChange={e => setDraft(d => ({ ...d, docLabel: e.target.value }))}
-              style={{ ...INPUT(), padding: '8px 10px' }}
-            >
-              <option value="">— none —</option>
-              {docLabels.map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <label style={LBL}>Attach document</label>
+              <button
+                type="button"
+                onClick={() => { setShowDocUpload(v => !v); setDocUploadError(''); }}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: showDocUpload ? 'var(--t-muted)' : 'var(--t-gold)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                {showDocUpload ? '× Cancel' : '+ Upload new'}
+              </button>
+            </div>
+
+            {showDocUpload ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--t-w03)', border: '1px solid var(--t-w10)', borderRadius: 4, padding: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <label style={LBL}>Label *</label>
+                  <input type="text" value={docLabel} onChange={e => setDocLabel(e.target.value)} placeholder="e.g. IndiGo 6E 634 — Kolkata → Goa" style={INPUT()} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <label style={LBL}>Sublabel</label>
+                  <input type="text" value={docSublabel} onChange={e => setDocSublabel(e.target.value)} placeholder="e.g. 14 Sep · Ticket" style={INPUT()} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <label style={LBL}>Category</label>
+                    <select value={docCategory} onChange={e => setDocCategory(e.target.value as DocCategory)} style={{ ...INPUT(), padding: '7px 10px' }}>
+                      {DOC_CATEGORIES.map(cat => (
+                        <option key={cat} value={cat}>{DOC_CATEGORY_ICON[cat]} {DOC_CATEGORY_LABELS[cat]}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <label style={LBL}>File *</label>
+                    <input ref={docFileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" style={{ ...INPUT(), padding: '6px 10px', fontSize: 11, color: 'var(--t-muted)' }} />
+                  </div>
+                </div>
+                {docUploadError && <p style={{ margin: 0, fontSize: 11, color: '#e07070' }}>{docUploadError}</p>}
+                <button type="button" onClick={handleDocUpload} disabled={docUploading}
+                  style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: docUploading ? 'var(--t-muted)' : 'var(--t-bg)', background: docUploading ? 'var(--t-gold-20)' : 'var(--t-gold)', border: 'none', borderRadius: 3, padding: '8px 14px', cursor: docUploading ? 'not-allowed' : 'pointer', alignSelf: 'flex-end' }}>
+                  {docUploading ? 'Uploading…' : '↑ Upload & attach'}
+                </button>
+              </div>
+            ) : (
+              <select
+                value={draft.docLabel}
+                onChange={e => setDraft(d => ({ ...d, docLabel: e.target.value }))}
+                style={{ ...INPUT(), padding: '8px 10px' }}
+              >
+                <option value="">— none —</option>
+                {docLabels.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            )}
           </div>
 
           {/* Tag/Cost + Status */}
