@@ -123,7 +123,10 @@ export default function DashboardPage({ onSelectTrip }: Props) {
     const ext = file.name.split('.').pop();
     const path = `covers/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('trip-covers').upload(path, file, { upsert: true });
-    if (!error) {
+    if (error) {
+      console.error('[imageUpload]', error);
+      alert('Upload failed: ' + error.message);
+    } else {
       const { data } = supabase.storage.from('trip-covers').getPublicUrl(path);
       setForm(f => ({ ...f, cover_image: data.publicUrl, cover_emoji: '' }));
     }
