@@ -68,6 +68,19 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
   const [creating, setCreating]       = useState(false);
   const [form, setForm]               = useState(BLANK_FORM());
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Location autocomplete
   const [locationQuery, setLocationQuery]           = useState('');
@@ -194,7 +207,7 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
 
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
-          {/* Top bar: logo + profile */}
+          {/* Top bar: logo + compact profile */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <img src="/favicon.png" width={32} height={32} alt="" />
@@ -202,37 +215,99 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                 TripTinker
               </span>
             </div>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {/* Theme toggle */}
               <button type="button" onClick={onToggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
                 style={{ background: 'var(--t-w04)', border: '1px solid var(--t-w10)', borderRadius: 20, padding: '5px 9px', cursor: 'pointer', fontSize: 13, lineHeight: 1, color: 'var(--t-muted)' }}>
                 {theme === 'dark' ? '☀' : '🌙'}
               </button>
-              {/* Avatar + email */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{
-                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                  background: 'var(--t-gold-20)', border: '1px solid var(--t-gold-30)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--t-gold)',
-                  textTransform: 'uppercase',
-                }}>
+
+              {/* Avatar dropdown */}
+              <div ref={profileRef} style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowProfileMenu(p => !p)}
+                  style={{
+                    width: 34, height: 34, borderRadius: '50%',
+                    background: 'var(--t-gold-20)', border: '1px solid var(--t-gold-30)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700,
+                    color: 'var(--t-gold)', textTransform: 'uppercase',
+                    cursor: 'pointer',
+                  }}
+                  title="Account"
+                >
                   {(user.user_metadata?.full_name?.[0] ?? user.email?.[0] ?? '?')}
-                </div>
-                <div className="hidden sm:block">
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--t-fg)', fontWeight: 600 }}>
-                    {user.user_metadata?.full_name}
+                </button>
+
+                {showProfileMenu && (
+                  <div style={{
+                    position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 100,
+                    background: 'var(--t-card)', border: '1px solid var(--t-w12)',
+                    borderRadius: 6, boxShadow: '0 8px 24px rgba(0,0,0,.4)',
+                    minWidth: 220,
+                  }}>
+                    {/* Account info */}
+                    <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--t-w08)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                          width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                          background: 'var(--t-gold-20)', border: '1px solid var(--t-gold-30)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700,
+                          color: 'var(--t-gold)', textTransform: 'uppercase',
+                        }}>
+                          {(user.user_metadata?.full_name?.[0] ?? user.email?.[0] ?? '?')}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t-fg)' }}>
+                            {user.user_metadata?.full_name}
+                          </div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t-muted)', marginTop: 1 }}>
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu items */}
+                    <div style={{ padding: '6px 0' }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowProfileMenu(false)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          width: '100%', textAlign: 'left',
+                          padding: '10px 16px', background: 'transparent', border: 'none',
+                          fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--t-fg)',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--t-w04)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <span>👤</span> My account
+                      </button>
+                      <div style={{ height: 1, background: 'var(--t-w08)', margin: '4px 0' }} />
+                      <button
+                        type="button"
+                        onClick={() => { setShowProfileMenu(false); onSignOut(); }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          width: '100%', textAlign: 'left',
+                          padding: '10px 16px', background: 'transparent', border: 'none',
+                          fontFamily: 'var(--font-mono)', fontSize: 12, color: '#e07070',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--t-w04)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <span>↩</span> Sign out
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {user.email}
-                  </div>
-                </div>
+                )}
               </div>
-              {/* Sign out */}
-              <button type="button" onClick={onSignOut}
-                style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--t-muted)', background: 'transparent', border: '1px solid var(--t-w10)', borderRadius: 3, padding: '6px 10px', cursor: 'pointer' }}>
-                Sign out
-              </button>
             </div>
           </div>
 
