@@ -197,14 +197,12 @@ export default function App() {
                 title="Edit trip details"
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--t-muted)', padding: '2px 4px', lineHeight: 1, flexShrink: 0 }}
               >✏</button>
-              {(trip.people_count ?? 1) > 1 && (
-                <button
-                  type="button"
-                  onClick={() => setShowShareTrip(true)}
-                  title="Share & collaborate"
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--t-muted)', padding: '2px 4px', lineHeight: 1, flexShrink: 0 }}
-                >🔗</button>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowShareTrip(true)}
+                title="Share & collaborate"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--t-muted)', padding: '2px 4px', lineHeight: 1, flexShrink: 0 }}
+              >🔗</button>
             </div>
             <button
               type="button"
@@ -250,29 +248,27 @@ export default function App() {
 
           <div className="gold-line" />
 
-          {/* Collaborate nudge — shown when trip has >1 person */}
-          {(trip.people_count ?? 1) > 1 && (
-            <button
-              type="button"
-              onClick={() => setShowShareTrip(true)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                marginTop: 10, width: '100%',
-                background: 'var(--t-gold-08)', border: '1px solid var(--t-gold-20)',
-                borderRadius: 3, padding: '7px 10px', cursor: 'pointer', textAlign: 'left',
-              }}
-            >
-              <span style={{ fontSize: 14 }}>🔗</span>
-              <div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 600, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Collaborate
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--t-muted)', marginTop: 1 }}>
-                  Invite your co-travellers
-                </div>
+          {/* Share / Collaborate nudge — always shown */}
+          <button
+            type="button"
+            onClick={() => setShowShareTrip(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              marginTop: 10, width: '100%',
+              background: 'var(--t-gold-08)', border: '1px solid var(--t-gold-20)',
+              borderRadius: 3, padding: '7px 10px', cursor: 'pointer', textAlign: 'left',
+            }}
+          >
+            <span style={{ fontSize: 14 }}>🔗</span>
+            <div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 600, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Share trip
               </div>
-            </button>
-          )}
+              <div style={{ fontSize: 11, color: 'var(--t-muted)', marginTop: 1 }}>
+                Invite others to view or edit
+              </div>
+            </div>
+          </button>
         </div>
 
         {/* Nav */}
