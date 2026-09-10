@@ -74,12 +74,16 @@ export default function EditTripModal({ trip, onClose, onSave }: Props) {
   const [locQuery, setLocQuery]           = useState(trip.destination ?? '');
   const [suggestions, setSuggestions]     = useState<LocationSuggestion[]>([]);
   const [showDrop, setShowDrop]           = useState(false);
+  const [travelFromQuery, setTravelFromQuery]     = useState(trip.travel_from ?? '');
+  const [travelFromSugs, setTravelFromSugs]       = useState<LocationSuggestion[]>([]);
+  const [showTravelFromDrop, setShowTravelFromDrop] = useState(false);
   const [saving, setSaving]               = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [coverTab, setCoverTab]           = useState<'emoji' | 'upload'>('emoji');
   const [uploadingCover, setUploadingCover] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const travelDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const searchLocation = useCallback((q: string) => {
     if (debounce.current) clearTimeout(debounce.current);
@@ -92,6 +96,21 @@ export default function EditTripModal({ trip, onClose, onSave }: Props) {
         );
         setSuggestions(await res.json());
         setShowDrop(true);
+      } catch { /* ignore */ }
+    }, 400);
+  }, []);
+
+  const searchTravelFrom = useCallback((q: string) => {
+    if (travelDebounce.current) clearTimeout(travelDebounce.current);
+    if (!q.trim()) { setTravelFromSugs([]); return; }
+    travelDebounce.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&addressdetails=1`,
+          { headers: { 'Accept-Language': 'en' } }
+        );
+        setTravelFromSugs(await res.json());
+        setShowTravelFromDrop(true);
       } catch { /* ignore */ }
     }, 400);
   }, []);
@@ -341,9 +360,36 @@ export default function EditTripModal({ trip, onClose, onSave }: Props) {
               ))}
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, position: 'relative' }}>
             <label style={lbl}>Traveling from</label>
-            <input type="text" value={form.travel_from} onChange={e => setForm(f => ({ ...f, travel_from: e.target.value }))} placeholder="e.g. Mumbai, Bangalore…" style={inp} />
+            <input
+              type="text"
+              value={travelFromQuery}
+              onChange={e => { setTravelFromQuery(e.target.value); setForm(f => ({ ...f, travel_from: e.target.value })); searchTravelFrom(e.target.value); }}
+              onFocus={() => travelFromSugs.length > 0 && setShowTravelFromDrop(true)}
+              onBlur={() => setTimeout(() => setShowTravelFromDrop(false), 150)}
+              placeholder="Search city or airport…"
+              style={inp}
+              autoComplete="off"
+            />
+            {showTravelFromDrop && travelFromSugs.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, background: 'var(--t-card)', border: '1px solid var(--t-w12)', borderRadius: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.3)', marginTop: 2 }}>
+                {travelFromSugs.map(s => {
+                  const flag = countryFlag(s.address?.country_code ?? '');
+                  const parts = s.display_name.split(',').map(p => p.trim());
+                  const short = parts.slice(0, 3).join(', ');
+                  return (
+                    <button key={s.place_id} type="button"
+                      onMouseDown={() => { setTravelFromQuery(short); setForm(f => ({ ...f, travel_from: short })); setTravelFromSugs([]); setShowTravelFromDrop(false); }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', fontSize: 13, color: 'var(--t-fg)', background: 'transparent', border: 'none', borderBottom: '1px solid var(--t-w08)', cursor: 'pointer' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--t-w04)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                      {flag && <span style={{ marginRight: 6 }}>{flag}</span>}{s.display_name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Notes / description */}

@@ -196,11 +196,17 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Location autocomplete
+  // Location autocomplete (destination)
   const [locationQuery, setLocationQuery]             = useState('');
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
   const [showLocationDrop, setShowLocationDrop]       = useState(false);
   const locationDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Location autocomplete (traveling from)
+  const [travelFromQuery, setTravelFromQuery]         = useState('');
+  const [travelFromSugs, setTravelFromSugs]           = useState<LocationSuggestion[]>([]);
+  const [showTravelFromDrop, setShowTravelFromDrop]   = useState(false);
+  const travelFromDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Emoji picker
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -260,6 +266,22 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
     setShowLocationDrop(false);
   }
 
+  // ── Travel-from autocomplete ─────────────────────────────────────────────
+  const searchTravelFrom = useCallback((q: string) => {
+    if (travelFromDebounce.current) clearTimeout(travelFromDebounce.current);
+    if (!q.trim()) { setTravelFromSugs([]); return; }
+    travelFromDebounce.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&addressdetails=1`,
+          { headers: { 'Accept-Language': 'en' } }
+        );
+        setTravelFromSugs(await res.json());
+        setShowTravelFromDrop(true);
+      } catch { /* ignore */ }
+    }, 400);
+  }, []);
+
   // ── Cover image upload ───────────────────────────────────────────────────
   async function handleImageUpload(file: File) {
     setUploadingCover(true);
@@ -303,6 +325,7 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
     if (trip) {
       setForm(BLANK_FORM());
       setLocationQuery('');
+      setTravelFromQuery('');
       setShowForm(false);
       setShowEmojiPicker(false);
       setTrips(prev => [trip, ...prev]);
@@ -460,14 +483,14 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
         {showForm && (
           <div
             style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,.7)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto' }}
-            onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setForm(BLANK_FORM()); setLocationQuery(''); setShowEmojiPicker(false); } }}
+            onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setForm(BLANK_FORM()); setLocationQuery(''); setTravelFromQuery(''); setShowEmojiPicker(false); } }}
           >
           <div className="luxury-card" style={{ width: '100%', maxWidth: 540, padding: 'clamp(20px, 5vw, 32px)', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 20, color: 'var(--t-fg)', margin: 0 }}>
                 New trip
               </h3>
-              <button type="button" onClick={() => { setShowForm(false); setForm(BLANK_FORM()); setLocationQuery(''); setShowEmojiPicker(false); }} style={{ background: 'none', border: 'none', color: 'var(--t-muted)', fontSize: 22, cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}>×</button>
+              <button type="button" onClick={() => { setShowForm(false); setForm(BLANK_FORM()); setLocationQuery(''); setTravelFromQuery(''); setShowEmojiPicker(false); }} style={{ background: 'none', border: 'none', color: 'var(--t-muted)', fontSize: 22, cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}>×</button>
             </div>
             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -704,16 +727,42 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                   ))}
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, position: 'relative' }}>
                 <label style={labelStyle}>Traveling from</label>
-                <input type="text" value={form.travel_from} onChange={e => setForm(f => ({ ...f, travel_from: e.target.value }))} placeholder="e.g. Mumbai, Bangalore…" style={inputStyle} />
+                <input
+                  type="text"
+                  value={travelFromQuery}
+                  onChange={e => { setTravelFromQuery(e.target.value); setForm(f => ({ ...f, travel_from: e.target.value })); searchTravelFrom(e.target.value); }}
+                  onFocus={() => travelFromSugs.length > 0 && setShowTravelFromDrop(true)}
+                  onBlur={() => setTimeout(() => setShowTravelFromDrop(false), 150)}
+                  placeholder="Search city or airport…"
+                  style={inputStyle}
+                  autoComplete="off"
+                />
+                {showTravelFromDrop && travelFromSugs.length > 0 && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, background: 'var(--t-card)', border: '1px solid var(--t-w12)', borderRadius: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.3)', marginTop: 2 }}>
+                    {travelFromSugs.map(s => {
+                      const flag = countryFlag(s.address?.country_code ?? '');
+                      const short = s.display_name.split(',').map((p: string) => p.trim()).slice(0, 3).join(', ');
+                      return (
+                        <button key={s.place_id} type="button"
+                          onMouseDown={() => { setTravelFromQuery(short); setForm(f => ({ ...f, travel_from: short })); setTravelFromSugs([]); setShowTravelFromDrop(false); }}
+                          style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', fontSize: 13, color: 'var(--t-fg)', background: 'transparent', border: 'none', borderBottom: '1px solid var(--t-w08)', cursor: 'pointer' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--t-w04)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                          {flag && <span style={{ marginRight: 6 }}>{flag}</span>}{s.display_name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Actions */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
                 <button
                   type="button"
-                  onClick={() => { setShowForm(false); setForm(BLANK_FORM()); setLocationQuery(''); setShowEmojiPicker(false); }}
+                  onClick={() => { setShowForm(false); setForm(BLANK_FORM()); setLocationQuery(''); setTravelFromQuery(''); setShowEmojiPicker(false); }}
                   style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--t-muted)', background: 'transparent', border: '1px solid var(--t-w10)', borderRadius: 3, padding: '9px 18px', cursor: 'pointer' }}
                 >
                   Cancel
