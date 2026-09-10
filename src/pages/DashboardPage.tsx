@@ -226,7 +226,7 @@ export default function DashboardPage({ onSelectTrip }: Props) {
 
         {/* ── New trip form ─────────────────────────────────────────────── */}
         {showForm && (
-          <div className="luxury-card" style={{ padding: '24px', marginBottom: 32 }}>
+          <div className="luxury-card" style={{ padding: 'clamp(14px, 4vw, 24px)', marginBottom: 32 }}>
             <h3 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 18, color: 'var(--t-fg)', margin: '0 0 20px' }}>
               New trip
             </h3>
@@ -564,106 +564,48 @@ export default function DashboardPage({ onSelectTrip }: Props) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {trips.map(trip => (
-              <div
-                key={trip.id}
-                className="luxury-card"
-                style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 12, padding: '16px' }}
-              >
-                {/* Cover */}
-                <div style={{
-                  width: 48, height: 48, borderRadius: 6, flexShrink: 0,
-                  overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'var(--t-gold-08)', fontSize: 28,
-                }}>
-                  {trip.cover_image
-                    ? <img src={trip.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : (trip.cover_emoji || '✈️')
-                  }
-                </div>
-
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
+              <div key={trip.id} className="luxury-card" style={{ padding: '14px 16px' }}>
+                {/* Row 1: cover + info */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{
-                    fontSize: 16, fontWeight: 600, color: 'var(--t-fg)',
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3,
+                    width: 44, height: 44, borderRadius: 6, flexShrink: 0,
+                    overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'var(--t-gold-08)', fontSize: 26,
                   }}>
-                    {trip.name}
+                    {trip.cover_image
+                      ? <img src={trip.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : (trip.cover_emoji || '✈️')
+                    }
                   </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t-muted)' }}>
-                    {trip.destination && <span>{trip.destination}</span>}
-                    {trip.destination && (trip.date_from || trip.date_to) && <span style={{ margin: '0 6px' }}>·</span>}
-                    {(trip.date_from || trip.date_to) && (
-                      <span>
-                        {trip.date_from ? new Date(trip.date_from + 'T00:00:00').toLocaleDateString('en', { day: 'numeric', month: 'short' }) : ''}
-                        {trip.date_from && trip.date_to ? ' – ' : ''}
-                        {trip.date_to ? new Date(trip.date_to + 'T00:00:00').toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
-                      </span>
-                    )}
-                    {(trip.trip_type || trip.people_count) && <span style={{ margin: '0 6px' }}>·</span>}
-                    {trip.trip_type && <span style={{ textTransform: 'capitalize' }}>{TRIP_TYPES.find(t => t.value === trip.trip_type)?.icon} {trip.trip_type}</span>}
-                    {trip.people_count && trip.people_count > 1 && <span style={{ marginLeft: 6 }}>· {trip.people_count} people</span>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--t-fg)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {trip.name}
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t-muted)', marginTop: 2, lineHeight: 1.5 }}>
+                      {[
+                        trip.destination,
+                        (trip.date_from || trip.date_to) ? [
+                          trip.date_from ? new Date(trip.date_from + 'T00:00:00').toLocaleDateString('en', { day: 'numeric', month: 'short' }) : '',
+                          trip.date_to ? new Date(trip.date_to + 'T00:00:00').toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
+                        ].filter(Boolean).join(' – ') : '',
+                        trip.trip_type ? `${TRIP_TYPES.find(t => t.value === trip.trip_type)?.icon} ${trip.trip_type}` : '',
+                        trip.people_count && trip.people_count > 1 ? `${trip.people_count} people` : '',
+                      ].filter(Boolean).join(' · ')}
+                    </div>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+                {/* Row 2: actions */}
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
                   {deleteConfirm === trip.id ? (
                     <>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirm(null)}
-                        style={{
-                          fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
-                          textTransform: 'uppercase', letterSpacing: '0.06em',
-                          color: 'var(--t-muted)', background: 'transparent',
-                          border: '1px solid var(--t-w10)', borderRadius: 3,
-                          padding: '6px 12px', cursor: 'pointer',
-                        }}
-                      >
-                        Keep
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async () => { await deleteTrip(trip.id); setDeleteConfirm(null); setTrips(prev => prev.filter(t => t.id !== trip.id)); }}
-                        style={{
-                          fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
-                          textTransform: 'uppercase', letterSpacing: '0.06em',
-                          color: '#e07070', background: 'rgba(224,112,112,.08)',
-                          border: '1px solid rgba(224,112,112,.3)', borderRadius: 3,
-                          padding: '6px 12px', cursor: 'pointer',
-                        }}
-                      >
-                        Delete
-                      </button>
+                      <button type="button" onClick={() => setDeleteConfirm(null)} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--t-muted)', background: 'transparent', border: '1px solid var(--t-w10)', borderRadius: 3, padding: '7px 14px', cursor: 'pointer' }}>Keep</button>
+                      <button type="button" onClick={async () => { await deleteTrip(trip.id); setDeleteConfirm(null); setTrips(prev => prev.filter(t => t.id !== trip.id)); }} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#e07070', background: 'rgba(224,112,112,.08)', border: '1px solid rgba(224,112,112,.3)', borderRadius: 3, padding: '7px 14px', cursor: 'pointer' }}>Delete</button>
                     </>
                   ) : (
                     <>
-                      <button
-                        type="button"
-                        onClick={() => onSelectTrip(trip)}
-                        style={{
-                          fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
-                          textTransform: 'uppercase', letterSpacing: '0.08em',
-                          color: 'var(--t-gold)', background: 'var(--t-gold-10)',
-                          border: '1px solid var(--t-gold-30)', borderRadius: 3,
-                          padding: '7px 16px', cursor: 'pointer',
-                        }}
-                      >
-                        Open
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteConfirm(trip.id)}
-                        aria-label={`Delete ${trip.name}`}
-                        style={{
-                          fontFamily: 'var(--font-mono)', fontSize: 14,
-                          color: 'var(--t-muted)', background: 'var(--t-w04)',
-                          border: '1px solid var(--t-w10)', borderRadius: 3,
-                          padding: '6px 10px', cursor: 'pointer', lineHeight: 1,
-                        }}
-                      >
-                        ×
-                      </button>
+                      <button type="button" onClick={() => onSelectTrip(trip)} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--t-gold)', background: 'var(--t-gold-10)', border: '1px solid var(--t-gold-30)', borderRadius: 3, padding: '7px 18px', cursor: 'pointer' }}>Open</button>
+                      <button type="button" onClick={() => setDeleteConfirm(trip.id)} aria-label={`Delete ${trip.name}`} style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: 'var(--t-muted)', background: 'var(--t-w04)', border: '1px solid var(--t-w10)', borderRadius: 3, padding: '6px 12px', cursor: 'pointer', lineHeight: 1 }}>×</button>
                     </>
                   )}
                 </div>
