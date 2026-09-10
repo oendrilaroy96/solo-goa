@@ -40,6 +40,21 @@ export const CATEGORY_LABEL: Record<EventCategory, string> = {
   activity: 'Activity',
 };
 
+export type TransportMode = 'flight' | 'train' | 'bus' | 'cab' | 'auto' | 'ferry' | 'bike' | 'walk';
+
+export const TRANSPORT_MODE_LABEL: Record<TransportMode, string> = {
+  flight: '✈ Flight',
+  train: '🚂 Train',
+  bus: '🚌 Bus',
+  cab: '🚕 Cab / Taxi',
+  auto: '🛺 Auto',
+  ferry: '⛴ Ferry',
+  bike: '🏍 Bike / Scooter',
+  walk: '🚶 Walk',
+};
+
+export const TRANSPORT_MODES = Object.keys(TRANSPORT_MODE_LABEL) as TransportMode[];
+
 export interface EventItem {
   id?: string;
   time: string;
@@ -52,6 +67,9 @@ export interface EventItem {
   email?: string;
   mapUrl?: string;
   docLabel?: string; // matches the label of a document in Supabase to link from this event
+  transportMode?: TransportMode;
+  ticketBooked?: boolean;
+  estimatedPrice?: string;
 }
 
 export interface DayData {

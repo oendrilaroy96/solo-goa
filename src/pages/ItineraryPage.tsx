@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import type { DayData, EventItem, TagVariant, EventCategory } from '../data/itinerary';
+import type { DayData, EventItem, TagVariant, EventCategory, TransportMode } from '../data/itinerary';
+import { TRANSPORT_MODE_LABEL, TRANSPORT_MODES } from '../data/itinerary';
 import { EVENT_CATEGORIES, CATEGORY_ICON, CATEGORY_LABEL } from '../data/itinerary';
 import type { DocCategory } from '../data/documents';
 import { CATEGORY_LABELS as DOC_CATEGORY_LABELS, CATEGORY_ICON as DOC_CATEGORY_ICON } from '../data/documents';
@@ -102,12 +103,16 @@ type EventDraft = {
   tag: string; tagVariant: TagVariant;
   categories: EventCategory[];
   phone: string; email: string; mapUrl: string; docLabel: string;
+  transportMode: TransportMode | '';
+  ticketBooked: boolean | null;
+  estimatedPrice: string;
 };
 type DayDraft = { isoDate: string; subtitle: string; weather: string };
 
 const BLANK_EVENT = (): EventDraft => ({
   time: '', title: '', description: '', tag: '', tagVariant: 'default',
   categories: [], phone: '', email: '', mapUrl: '', docLabel: '',
+  transportMode: '', ticketBooked: null, estimatedPrice: '',
 });
 const BLANK_DAY = (): DayDraft => ({ isoDate: '', subtitle: '', weather: '' });
 
@@ -342,6 +347,8 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
       categories: ev.categories ?? [],
       phone: ev.phone ?? '', email: ev.email ?? '',
       mapUrl: ev.mapUrl ?? '', docLabel: ev.docLabel ?? '',
+      transportMode: ev.transportMode ?? '', ticketBooked: ev.ticketBooked ?? null,
+      estimatedPrice: ev.estimatedPrice ?? '',
     });
     setShowForm(true);
   }
@@ -411,14 +418,24 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
 
   async function commitEvent() {
     if (!draft.title.trim() || !activeDay) return;
+    const isTransport = draft.categories.includes('transport');
+    // Auto-fill tag from estimatedPrice if tag is empty and ticket isn't booked
+    const autoTag = (!draft.tag.trim() && isTransport && draft.ticketBooked === false && draft.estimatedPrice.trim())
+      ? draft.estimatedPrice.trim() : draft.tag;
+    const autoVariant: TagVariant = (isTransport && draft.ticketBooked === false && !draft.tag.trim())
+      ? 'pending' : draft.tagVariant;
     const clean: Partial<EventItem> = {
       time: draft.time, title: draft.title, description: draft.description,
-      tag: draft.tag, tagVariant: draft.tagVariant,
+      tag: autoTag, tagVariant: autoVariant,
       categories: draft.categories.length ? draft.categories : undefined,
       phone: draft.phone.trim() || undefined,
       email: draft.email.trim() || undefined,
       mapUrl: draft.mapUrl.trim() || undefined,
       docLabel: draft.docLabel.trim() || undefined,
+      transportMode: (isTransport && draft.transportMode) ? draft.transportMode : undefined,
+      ticketBooked: isTransport && draft.ticketBooked !== null ? draft.ticketBooked : undefined,
+      estimatedPrice: (isTransport && draft.ticketBooked === false && draft.estimatedPrice.trim())
+        ? draft.estimatedPrice.trim() : undefined,
     };
     const next = allDays.map(d => {
       if (d.day !== activeDay.day) return d;
@@ -791,6 +808,79 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
             </div>
           </div>
 
+          {/* Transport details */}
+          {draft.categories.includes('transport') && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--t-w03)', border: '1px solid var(--t-w10)', borderRadius: 4, padding: 12 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Transport details</div>
+
+              {/* Mode */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={LBL}>Mode of transport</label>
+                <select
+                  value={draft.transportMode}
+                  onChange={e => setDraft(d => ({ ...d, transportMode: e.target.value as TransportMode | '' }))}
+                  style={{ ...INPUT(), padding: '8px 10px' }}
+                >
+                  <option value="">— select —</option>
+                  {TRANSPORT_MODES.map(m => (
+                    <option key={m} value={m}>{TRANSPORT_MODE_LABEL[m]}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Booked? */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={LBL}>Have you booked the ticket?</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {([true, false] as const).map(val => {
+                    const active = draft.ticketBooked === val;
+                    return (
+                      <button
+                        key={String(val)}
+                        type="button"
+                        onClick={() => {
+                          setDraft(d => ({ ...d, ticketBooked: val }));
+                          if (val) setShowDocUpload(true);
+                        }}
+                        style={{
+                          fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
+                          textTransform: 'uppercase', letterSpacing: '0.06em',
+                          padding: '6px 16px', borderRadius: 3, cursor: 'pointer',
+                          border: active ? '1px solid var(--t-gold-60)' : '1px solid var(--t-w10)',
+                          background: active ? 'var(--t-gold-12)' : 'var(--t-w03)',
+                          color: active ? 'var(--t-gold)' : 'var(--t-muted)',
+                        }}
+                      >
+                        {val ? 'Yes' : 'No'}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Estimated price if not booked */}
+              {draft.ticketBooked === false && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={LBL}>Estimated cost</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. ₹1,500"
+                    value={draft.estimatedPrice}
+                    onChange={e => setDraft(d => ({ ...d, estimatedPrice: e.target.value }))}
+                    style={INPUT()}
+                  />
+                </div>
+              )}
+
+              {/* Ticket booked note */}
+              {draft.ticketBooked === true && (
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--t-muted)', lineHeight: 1.5 }}>
+                  Use the <strong style={{ color: 'var(--t-fg)' }}>Attach document</strong> section below to upload your ticket.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Notes */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <label style={LBL}>Notes</label>
@@ -879,7 +969,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
           {/* Tag/Cost + Status */}
           <div className="grid grid-cols-1 sm:grid-cols-[1fr_130px] gap-[12px]">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={LBL}>Tag / Cost</label>
+              <label style={LBL}>Amount</label>
               <input type="text" placeholder="e.g. ₹500 or Free" value={draft.tag} onChange={e => setDraft(d => ({ ...d, tag: e.target.value }))} style={INPUT()} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
