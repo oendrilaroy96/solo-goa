@@ -780,36 +780,23 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
             </div>
           )}
 
-          {/* Time + Title */}
-          {draft.categories.includes('transport') ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={LBL}>Title *</label>
-                <input type="text" placeholder="What's happening?" value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} style={INPUT()} />
-              </div>
-              <div className="grid grid-cols-2 gap-[12px]">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <label style={LBL}>Departure time</label>
-                  <input type="text" placeholder="e.g. 11:50 AM" value={draft.time} onChange={e => setDraft(d => ({ ...d, time: e.target.value }))} style={INPUT()} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <label style={LBL}>Arrival time</label>
-                  <input type="text" placeholder="e.g. 2:35 PM" value={draft.timeEnd} onChange={e => setDraft(d => ({ ...d, timeEnd: e.target.value }))} style={INPUT()} />
-                </div>
-              </div>
+          {/* Title */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={LBL}>Title *</label>
+            <input type="text" placeholder="What's happening?" value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} style={INPUT()} />
+          </div>
+
+          {/* Time */}
+          <div className="grid grid-cols-2 gap-[12px]">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={LBL}>{draft.categories.includes('transport') ? 'Departure time' : 'From'}</label>
+              <input type="text" placeholder="e.g. 9:00 AM" value={draft.time} onChange={e => setDraft(d => ({ ...d, time: e.target.value }))} style={INPUT()} />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-[12px]">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={LBL}>Time</label>
-                <input type="text" placeholder="e.g. 3:00 PM" value={draft.time} onChange={e => setDraft(d => ({ ...d, time: e.target.value }))} style={INPUT()} />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={LBL}>Title *</label>
-                <input type="text" placeholder="What's happening?" value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} style={INPUT()} />
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={LBL}>{draft.categories.includes('transport') ? 'Arrival time' : 'To'} <span style={{ color: 'var(--t-muted)', fontWeight: 400 }}>(optional)</span></label>
+              <input type="text" placeholder="e.g. 11:00 AM" value={draft.timeEnd} onChange={e => setDraft(d => ({ ...d, timeEnd: e.target.value }))} style={INPUT()} />
             </div>
-          )}
+          </div>
 
           {/* Category chips */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
