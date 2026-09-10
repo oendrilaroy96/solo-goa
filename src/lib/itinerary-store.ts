@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 import type { DayData } from '../data/itinerary';
-import { days as seedDays } from '../data/itinerary';
 
 const KEY = 'itinerary_v2';
 
@@ -15,10 +14,11 @@ export function ensureIds(days: DayData[]): DayData[] {
   }));
 }
 
-export async function loadItinerary(): Promise<DayData[]> {
+export async function loadItinerary(tripId: string): Promise<DayData[]> {
   const { data } = await supabase
-    .from('kv')
+    .from('trip_kv')
     .select('value')
+    .eq('itinerary_id', tripId)
     .eq('key', KEY)
     .maybeSingle();
 
@@ -26,14 +26,11 @@ export async function loadItinerary(): Promise<DayData[]> {
     return ensureIds(data.value as DayData[]);
   }
 
-  // First run: seed from static data file
-  const seeded = ensureIds(seedDays as DayData[]);
-  await saveItinerary(seeded);
-  return seeded;
+  return [];
 }
 
-export async function saveItinerary(days: DayData[]): Promise<void> {
-  await supabase.from('kv').upsert({ key: KEY, value: days });
+export async function saveItinerary(tripId: string, days: DayData[]): Promise<void> {
+  await supabase.from('trip_kv').upsert({ itinerary_id: tripId, key: KEY, value: days });
 }
 
 export function newEventId(): string {

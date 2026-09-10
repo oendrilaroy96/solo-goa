@@ -24,11 +24,12 @@ function publicUrl(filename: string): string {
 }
 
 interface Props {
+  tripId: string;
   autoOpenLabel?: string | null;
   onAutoOpenHandled?: () => void;
 }
 
-export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
+export default function DocsPage({ tripId, autoOpenLabel, onAutoOpenHandled }: Props) {
   const [docs, setDocs]         = useState<RemoteDoc[]>([]);
   const [viewing, setViewing]   = useState<RemoteDoc | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -41,12 +42,12 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   function fetchDocs() {
-    supabase.from('documents').select('*').order('created_at').then(({ data }) => {
+    supabase.from('documents').select('*').eq('itinerary_id', tripId).order('created_at').then(({ data }) => {
       if (data) setDocs(data as RemoteDoc[]);
     });
   }
 
-  useEffect(() => { fetchDocs(); }, []);
+  useEffect(() => { fetchDocs(); }, [tripId]);
 
   // Auto-open a doc by label when navigated from the itinerary
   useEffect(() => {
@@ -76,6 +77,7 @@ export default function DocsPage({ autoOpenLabel, onAutoOpenHandled }: Props) {
       sublabel: sublabel.trim(),
       category,
       filename,
+      itinerary_id: tripId,
     });
     if (dbErr) { setError(dbErr.message); setUploading(false); return; }
 

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import type { Session } from '@supabase/supabase-js';
 
 function useTheme() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -11,6 +12,9 @@ function useTheme() {
   const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
   return { theme, toggle };
 }
+
+import { supabase } from './lib/supabase';
+import { signOut } from './lib/auth';
 import { budgetGroups, STORAGE_KEY } from './data/budget';
 import ItineraryPage from './pages/ItineraryPage';
 import BudgetPage from './pages/BudgetPage';
@@ -20,6 +24,9 @@ import ShoppingPage from './pages/ShoppingPage';
 import PackingPage from './pages/PackingPage';
 import ChecklistPage from './pages/ChecklistPage';
 import DocsPage from './pages/DocsPage';
+import AuthPage from './pages/AuthPage';
+import DashboardPage from './pages/DashboardPage';
+import type { Trip } from './lib/trips';
 
 type PageId = 'itinerary' | 'stays' | 'budget' | 'food-reference' | 'shopping-reference' | 'packing' | 'checklist' | 'docs';
 
@@ -52,11 +59,25 @@ const fmt = (v: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
 
 export default function App() {
-  const [page, setPage] = useState<PageId>(getStoredPage);
-  const [total, setTotal] = useState<number>(initTotal);
+  const [session, setSession]     = useState<Session | null | undefined>(undefined); // undefined = loading
+  const [trip, setTrip]           = useState<Trip | null>(null);
+  const [page, setPage]           = useState<PageId>(getStoredPage);
+  const [total, setTotal]         = useState<number>(initTotal);
   const [autoOpenDoc, setAutoOpenDoc] = useState<string | null>(null);
   const { theme, toggle } = useTheme();
   const handleTotalChange = useCallback((t: number) => setTotal(t), []);
+
+  // Auth state
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      if (!s) setTrip(null); // clear trip on sign out
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const openDoc = useCallback((label: string) => {
     setAutoOpenDoc(label);
@@ -71,6 +92,83 @@ export default function App() {
     try { localStorage.setItem('goaSelectedPage', id); } catch { /* */ }
   }
 
+  function handleSelectTrip(t: Trip) {
+    setTrip(t);
+    setPage('itinerary');
+  }
+
+  function handleBackToDashboard() {
+    setTrip(null);
+  }
+
+  async function handleSignOut() {
+    await signOut();
+  }
+
+  // Loading state while checking auth
+  if (session === undefined) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--t-bg)' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+          Loading…
+        </span>
+      </div>
+    );
+  }
+
+  // Not logged in
+  if (!session) {
+    return <AuthPage />;
+  }
+
+  // Logged in but no trip selected
+  if (!trip) {
+    return (
+      <>
+        <div style={{ position: 'fixed', top: 16, right: 20, zIndex: 50, display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button
+            type="button"
+            onClick={toggle}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            style={{
+              background: 'var(--t-card)',
+              border: '1px solid var(--t-w12)',
+              borderRadius: 20,
+              padding: '6px 10px',
+              cursor: 'pointer',
+              fontSize: 14,
+              lineHeight: 1,
+              color: 'var(--t-muted)',
+            }}
+          >
+            {theme === 'dark' ? '☀' : '🌙'}
+          </button>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: 'var(--t-muted)',
+              background: 'transparent',
+              border: '1px solid var(--t-w10)',
+              borderRadius: 3,
+              padding: '6px 12px',
+              cursor: 'pointer',
+            }}
+          >
+            Sign out
+          </button>
+        </div>
+        <DashboardPage onSelectTrip={handleSelectTrip} />
+      </>
+    );
+  }
+
+  // Trip view
   return (
     <>
       {/* Skip link — WCAG 2.4.1 */}
@@ -93,11 +191,11 @@ export default function App() {
       >
         {/* Logo area */}
         <div style={{ padding: '28px 20px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <img src="/favicon.png" width={32} height={32} alt="" style={{ display: 'block' }} />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
-                Solo Goa
+              <span style={{ fontSize: 20, lineHeight: 1 }}>{trip.cover_emoji || '✈'}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+                {trip.name}
               </span>
             </div>
             <button
@@ -118,6 +216,30 @@ export default function App() {
               {theme === 'dark' ? '☀' : '🌙'}
             </button>
           </div>
+
+          {/* Back to dashboard */}
+          <button
+            type="button"
+            onClick={handleBackToDashboard}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              color: 'var(--t-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              padding: '4px 0',
+              marginBottom: 8,
+            }}
+          >
+            ← All trips
+          </button>
+
           <div className="gold-line" />
         </div>
 
@@ -167,15 +289,35 @@ export default function App() {
           })}
         </nav>
 
-        {/* Total at bottom */}
+        {/* Bottom: total + sign out */}
         <div style={{ padding: '16px 20px 28px' }}>
           <div className="gold-line" style={{ marginBottom: 16 }} />
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
             Estimated total
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 16, color: 'var(--t-gold)', fontWeight: 600 }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 16, color: 'var(--t-gold)', fontWeight: 600, marginBottom: 14 }}>
             {fmt(total)}
           </div>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              color: 'var(--t-muted)',
+              background: 'transparent',
+              border: '1px solid var(--t-w10)',
+              borderRadius: 3,
+              padding: '6px 12px',
+              cursor: 'pointer',
+              width: '100%',
+            }}
+          >
+            Sign out
+          </button>
         </div>
       </aside>
 
@@ -196,14 +338,14 @@ export default function App() {
             >
               {page === p.id && (
                 <>
-                  {p.id === 'itinerary'          && <ItineraryPage onOpenDoc={openDoc} />}
+                  {p.id === 'itinerary'          && <ItineraryPage tripId={trip.id} onOpenDoc={openDoc} />}
                   {p.id === 'stays'              && <StaysPage />}
-                  {p.id === 'budget'             && <BudgetPage onTotalChange={handleTotalChange} />}
+                  {p.id === 'budget'             && <BudgetPage tripId={trip.id} onTotalChange={handleTotalChange} />}
                   {p.id === 'food-reference'     && <FoodPage />}
                   {p.id === 'shopping-reference' && <ShoppingPage />}
-                  {p.id === 'packing'            && <PackingPage />}
-                  {p.id === 'checklist'          && <ChecklistPage />}
-                  {p.id === 'docs'               && <DocsPage autoOpenLabel={autoOpenDoc} onAutoOpenHandled={() => setAutoOpenDoc(null)} />}
+                  {p.id === 'packing'            && <PackingPage tripId={trip.id} />}
+                  {p.id === 'checklist'          && <ChecklistPage tripId={trip.id} />}
+                  {p.id === 'docs'               && <DocsPage tripId={trip.id} autoOpenLabel={autoOpenDoc} onAutoOpenHandled={() => setAutoOpenDoc(null)} />}
                 </>
               )}
             </div>
@@ -259,6 +401,27 @@ export default function App() {
         role="tablist"
         aria-label="Page sections"
       >
+        {/* Back button for mobile */}
+        <button
+          type="button"
+          onClick={handleBackToDashboard}
+          className="flex-none flex flex-col items-center justify-center gap-0.5 py-2.5 cursor-pointer border-0 transition-all"
+          style={{
+            background: 'transparent',
+            borderTop: '2px solid transparent',
+            minWidth: 44,
+            padding: '10px 8px',
+          }}
+        >
+          <span className="text-[15px] leading-none">←</span>
+          <span
+            className="text-[8px] font-bold uppercase tracking-wide"
+            style={{ fontFamily: 'var(--font-mono)', color: 'var(--t-muted)' }}
+          >
+            Trips
+          </span>
+        </button>
+
         {PAGES.map(p => {
           const isActive = page === p.id;
           return (

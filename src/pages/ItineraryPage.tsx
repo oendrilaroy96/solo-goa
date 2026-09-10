@@ -136,10 +136,11 @@ function stripHtml(html: string): string {
 // ─── component ────────────────────────────────────────────────────────────────
 
 interface Props {
+  tripId: string;
   onOpenDoc?: (label: string) => void;
 }
 
-export default function ItineraryPage({ onOpenDoc }: Props) {
+export default function ItineraryPage({ tripId, onOpenDoc }: Props) {
   const [allDays, setAllDays]         = useState<DayData[]>([]);
   const [loading, setLoading]         = useState(true);
   const [selectedDay, setSelectedDay] = useState(getStoredDay);
@@ -158,12 +159,12 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
   // ── load ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    loadItinerary().then(days => { setAllDays(days); setLoading(false); });
-    supabase.from('documents').select('*').order('label').then(({ data, error }) => {
+    loadItinerary(tripId).then(days => { setAllDays(days); setLoading(false); });
+    supabase.from('documents').select('*').eq('itinerary_id', tripId).order('label').then(({ data, error }) => {
       if (error) console.error('docs fetch:', error);
       if (data) setDocLabels((data as { label: string }[]).map(d => d.label));
     });
-  }, []);
+  }, [tripId]);
 
   useEffect(() => {
     try { localStorage.setItem('goaSelectedDay', selectedDay); } catch { /* */ }
@@ -181,7 +182,7 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
 
   async function persist(next: DayData[]) {
     setAllDays(next);
-    await saveItinerary(next);
+    await saveItinerary(tripId, next);
   }
 
   // ── event CRUD ────────────────────────────────────────────────────────────

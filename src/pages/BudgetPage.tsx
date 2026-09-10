@@ -18,10 +18,11 @@ function loadLocal(count: number): number[] {
 const allItems = budgetGroups.flatMap(g => g.items);
 
 interface Props {
+  tripId: string;
   onTotalChange: (total: number) => void;
 }
 
-export default function BudgetPage({ onTotalChange }: Props) {
+export default function BudgetPage({ tripId, onTotalChange }: Props) {
   const defaults = allItems.map(i => i.defaultValue);
   const saved    = loadLocal(defaults.length);
   const initial  = saved.length ? saved : defaults;
@@ -33,7 +34,7 @@ export default function BudgetPage({ onTotalChange }: Props) {
 
   // Load from Supabase on mount; override local if found
   useEffect(() => {
-    supabase.from('kv').select('value').eq('key', SUPA_KEY).maybeSingle().then(({ data }) => {
+    supabase.from('trip_kv').select('value').eq('itinerary_id', tripId).eq('key', SUPA_KEY).maybeSingle().then(({ data }) => {
       if (data?.value && Array.isArray(data.value) && data.value.length === defaults.length) {
         const remote = (data.value as unknown[]).map(Number);
         setValues(remote);
@@ -42,7 +43,7 @@ export default function BudgetPage({ onTotalChange }: Props) {
       skipSave.current = false;
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [tripId]);
 
   const total = values.reduce((s, v) => s + (isNaN(v) ? 0 : v), 0);
 
@@ -53,7 +54,7 @@ export default function BudgetPage({ onTotalChange }: Props) {
     }
     if (skipSave.current) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(values)); } catch { /* */ }
-    supabase.from('kv').upsert({ key: SUPA_KEY, value: values }).then(() => { /* fire-and-forget */ });
+    supabase.from('trip_kv').upsert({ itinerary_id: tripId, key: SUPA_KEY, value: values }).then(() => { /* fire-and-forget */ });
   }, [total, values, onTotalChange]);
 
   function setValue(globalIdx: number, val: number) {

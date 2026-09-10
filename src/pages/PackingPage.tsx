@@ -26,19 +26,19 @@ function loadLocal(): boolean[] {
 
 // ── Outfits tab ─────────────────────────────────────────────────────────────
 
-function OutfitsTab() {
+function OutfitsTab({ tripId }: { tripId: string }) {
   // outfits: { [day]: filename in storage }
   const [outfits, setOutfits] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<string | null>(null); // day being uploaded
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
-    supabase.from('kv').select('value').eq('key', 'outfits').maybeSingle().then(({ data }) => {
+    supabase.from('trip_kv').select('value').eq('itinerary_id', tripId).eq('key', 'outfits').maybeSingle().then(({ data }) => {
       if (data?.value && typeof data.value === 'object') {
         setOutfits(data.value as Record<string, string>);
       }
     });
-  }, []);
+  }, [tripId]);
 
   async function handleUpload(day: string) {
     const file = fileRefs.current[day]?.files?.[0];
@@ -58,7 +58,7 @@ function OutfitsTab() {
 
     const next = { ...outfits, [day]: filename };
     setOutfits(next);
-    await supabase.from('kv').upsert({ key: 'outfits', value: next });
+    await supabase.from('trip_kv').upsert({ itinerary_id: tripId, key: 'outfits', value: next });
     setUploading(null);
 
     // Reset file input
@@ -71,7 +71,7 @@ function OutfitsTab() {
     const next = { ...outfits };
     delete next[day];
     setOutfits(next);
-    await supabase.from('kv').upsert({ key: 'outfits', value: next });
+    await supabase.from('trip_kv').upsert({ itinerary_id: tripId, key: 'outfits', value: next });
   }
 
   function getPublicUrl(filename: string): string {
@@ -198,7 +198,11 @@ const TAB_STYLE = (active: boolean) => ({
   transition: 'all 0.15s',
 });
 
-export default function PackingPage() {
+interface PackingPageProps {
+  tripId: string;
+}
+
+export default function PackingPage({ tripId }: PackingPageProps) {
   const [tab, setTab]       = useState<'checklist' | 'outfits'>('checklist');
   const [checked, setChecked] = useState<boolean[]>(loadLocal);
   const skipSave = useRef(true);
@@ -207,7 +211,7 @@ export default function PackingPage() {
   const total = allItems.length;
 
   useEffect(() => {
-    supabase.from('kv').select('value').eq('key', SUPA_KEY).maybeSingle().then(({ data }) => {
+    supabase.from('trip_kv').select('value').eq('itinerary_id', tripId).eq('key', SUPA_KEY).maybeSingle().then(({ data }) => {
       if (data?.value && Array.isArray(data.value) && data.value.length === allItems.length) {
         const remote = data.value as boolean[];
         setChecked(remote);
@@ -215,12 +219,12 @@ export default function PackingPage() {
       }
       skipSave.current = false;
     });
-  }, []);
+  }, [tripId]);
 
   useEffect(() => {
     if (skipSave.current) return;
     try { localStorage.setItem(LOCAL_KEY, JSON.stringify(checked)); } catch { /* */ }
-    supabase.from('kv').upsert({ key: SUPA_KEY, value: checked }).then(() => { /* fire-and-forget */ });
+    supabase.from('trip_kv').upsert({ itinerary_id: tripId, key: SUPA_KEY, value: checked }).then(() => { /* fire-and-forget */ });
   }, [checked]);
 
   function toggle(globalIdx: number) {
@@ -257,7 +261,7 @@ export default function PackingPage() {
       </div>
 
       {tab === 'outfits' ? (
-        <OutfitsTab />
+        <OutfitsTab tripId={tripId} />
       ) : (
         <>
           <div className="flex items-baseline justify-between gap-2.5 mb-1">

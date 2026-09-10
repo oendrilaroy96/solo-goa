@@ -13,7 +13,11 @@ function loadLocal(): boolean[] {
   return beforeBookingItems.map(() => false);
 }
 
-export default function ChecklistPage() {
+interface Props {
+  tripId: string;
+}
+
+export default function ChecklistPage({ tripId }: Props) {
   const [checked, setChecked] = useState<boolean[]>(loadLocal);
   const skipSave = useRef(true);
 
@@ -22,7 +26,7 @@ export default function ChecklistPage() {
 
   // Load from Supabase on mount
   useEffect(() => {
-    supabase.from('kv').select('value').eq('key', SUPA_KEY).maybeSingle().then(({ data }) => {
+    supabase.from('trip_kv').select('value').eq('itinerary_id', tripId).eq('key', SUPA_KEY).maybeSingle().then(({ data }) => {
       if (data?.value && Array.isArray(data.value) && data.value.length === beforeBookingItems.length) {
         const remote = data.value as boolean[];
         setChecked(remote);
@@ -30,12 +34,12 @@ export default function ChecklistPage() {
       }
       skipSave.current = false;
     });
-  }, []);
+  }, [tripId]);
 
   useEffect(() => {
     if (skipSave.current) return;
     try { localStorage.setItem(LOCAL_KEY, JSON.stringify(checked)); } catch { /* */ }
-    supabase.from('kv').upsert({ key: SUPA_KEY, value: checked }).then(() => { /* fire-and-forget */ });
+    supabase.from('trip_kv').upsert({ itinerary_id: tripId, key: SUPA_KEY, value: checked }).then(() => { /* fire-and-forget */ });
   }, [checked]);
 
   function toggle(idx: number) {
