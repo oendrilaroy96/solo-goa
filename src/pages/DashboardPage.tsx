@@ -337,7 +337,7 @@ export default function DashboardPage({ onSelectTrip }: Props) {
                   {coverTab === 'upload' && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <p style={{ fontSize: 12, color: 'var(--t-muted)', margin: 0 }}>
-                        Upload a logo or photo for this trip. PNG/JPG, max 2 MB.
+                        Upload a logo or photo for this trip. PNG/JPG, max 200 KB.
                       </p>
                       <input
                         ref={fileInputRef}
@@ -346,7 +346,13 @@ export default function DashboardPage({ onSelectTrip }: Props) {
                         style={{ display: 'none' }}
                         onChange={e => {
                           const file = e.target.files?.[0];
-                          if (file) handleImageUpload(file);
+                          if (!file) return;
+                          if (file.size > 200 * 1024) {
+                            alert('Image must be under 200 KB');
+                            e.target.value = '';
+                            return;
+                          }
+                          handleImageUpload(file);
                         }}
                       />
                       <button
