@@ -23,7 +23,8 @@ export async function listTrips(): Promise<Trip[]> {
 export async function createTrip(t: Omit<Trip, 'id' | 'created_at'>): Promise<Trip | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data } = await supabase.from('itineraries').insert({ ...t, user_id: user.id }).select().single();
+  const { data, error } = await supabase.from('itineraries').insert({ ...t, user_id: user.id }).select().single();
+  if (error) console.error('[createTrip]', error);
   return data as Trip | null;
 }
 
