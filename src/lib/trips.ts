@@ -24,28 +24,36 @@ export interface Trip {
 }
 
 export async function listTrips(): Promise<Trip[]> {
+  // Own trips — RLS handles filtering to current user automatically
+  const { data: own, error } = await supabase
+    .from('itineraries').select('*').order('created_at', { ascending: false });
+
+  if (error) console.error('[listTrips]', error);
+  const ownTrips = (own ?? []) as Trip[];
+
+  // Shared trips via accepted invites
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return [];
+  if (!user?.email) return ownTrips;
 
-  // Own trips
-  const { data: own } = await supabase
-    .from('itineraries').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-
-  // Shared trips (accepted invites matching user email)
   const { data: invites } = await supabase
-    .from('trip_invites').select('itinerary_id').eq('invited_email', user.email!).not('accepted_at', 'is', null);
+    .from('trip_invites')
+    .select('itinerary_id')
+    .eq('invited_email', user.email)
+    .not('accepted_at', 'is', null);
 
-  let shared: Trip[] = [];
-  if (invites && invites.length > 0) {
-    const ids = invites.map((i: { itinerary_id: string }) => i.itinerary_id);
-    const { data: sharedData } = await supabase.from('itineraries').select('*').in('id', ids);
-    shared = (sharedData ?? []) as Trip[];
-  }
+  if (!invites || invites.length === 0) return ownTrips;
 
-  // Merge, deduplicate by id (own trips take precedence)
-  const ownIds = new Set((own ?? []).map((t: Trip) => t.id));
-  const deduped = shared.filter(t => !ownIds.has(t.id));
-  return [...(own ?? []) as Trip[], ...deduped].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const ownIds = new Set(ownTrips.map(t => t.id));
+  const sharedIds = (invites as { itinerary_id: string }[])
+    .map(i => i.itinerary_id)
+    .filter(id => !ownIds.has(id));
+
+  if (sharedIds.length === 0) return ownTrips;
+
+  const { data: sharedData } = await supabase.from('itineraries').select('*').in('id', sharedIds);
+  const shared = (sharedData ?? []) as Trip[];
+
+  return [...ownTrips, ...shared].sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
 export async function createTrip(t: Omit<Trip, 'id' | 'created_at'>): Promise<Trip | null> {
