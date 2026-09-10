@@ -194,6 +194,12 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
   const [showDayForm, setShowDayForm] = useState(false);
   const [dayDraft, setDayDraft]       = useState<DayDraft>(BLANK_DAY());
 
+  // AI fill panel
+  const [showAiPanel, setShowAiPanel] = useState(false);
+  const [aiDescription, setAiDescription] = useState('');
+  const [aiLoading, setAiLoading]     = useState(false);
+  const [aiError, setAiError]         = useState('');
+
   // inline doc upload (inside event form)
   const [showDocUpload, setShowDocUpload]   = useState(false);
   const [docLabel, setDocLabel]             = useState('');
@@ -338,6 +344,36 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
       mapUrl: ev.mapUrl ?? '', docLabel: ev.docLabel ?? '',
     });
     setShowForm(true);
+  }
+
+  async function handleAiFill() {
+    if (!aiDescription.trim() || !activeDay) return;
+    setAiLoading(true);
+    setAiError('');
+    try {
+      const res = await fetch('/api/ai-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: aiDescription.trim(),
+          destination: trip.destination,
+          dateLabel: activeDay.subtitle,
+        }),
+      });
+      const data = await res.json() as { events?: Record<string, unknown>[]; error?: string };
+      if (!res.ok || data.error) { setAiError(data.error ?? 'AI request failed'); setAiLoading(false); return; }
+      if (!data.events?.length) { setAiError('No events returned — try rephrasing.'); setAiLoading(false); return; }
+      const newEvents = data.events.map(e => ({ ...e, id: newEventId() })) as Parameters<typeof persist>[0][number]['events'];
+      const next = allDays.map(d =>
+        d.day === activeDay.day ? { ...d, events: [...d.events, ...newEvents] } : d
+      );
+      await persist(next);
+      setAiDescription('');
+      setShowAiPanel(false);
+    } catch {
+      setAiError('Network error — please try again.');
+    }
+    setAiLoading(false);
   }
 
   async function handleDocUpload() {
@@ -606,29 +642,74 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
         />
       )}
 
-      {/* Add event button */}
+      {/* Add event + AI fill buttons */}
       {!showForm && activeDay && (
-        <button
-          type="button"
-          onClick={openAdd}
-          style={{
-            marginTop: 24,
-            fontFamily: 'var(--font-mono)',
-            fontSize: 11,
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            color: 'var(--t-gold)',
-            background: 'var(--t-gold-06)',
-            border: '1px dashed var(--t-gold-30)',
-            borderRadius: 3,
-            padding: '10px 20px',
-            cursor: 'pointer',
-            width: '100%',
-          }}
-        >
-          + Add event to {activeDay.weekday} {activeDay.day}
-        </button>
+        <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              onClick={openAdd}
+              style={{
+                flex: 1,
+                fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
+                textTransform: 'uppercase', letterSpacing: '0.08em',
+                color: 'var(--t-gold)', background: 'var(--t-gold-06)',
+                border: '1px dashed var(--t-gold-30)', borderRadius: 3,
+                padding: '10px 20px', cursor: 'pointer',
+              }}
+            >
+              + Add event to {activeDay.weekday} {activeDay.day}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowAiPanel(v => !v); setAiError(''); }}
+              title="Describe your day and AI will fill it in"
+              style={{
+                fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600,
+                textTransform: 'uppercase', letterSpacing: '0.08em',
+                color: showAiPanel ? 'var(--t-muted)' : 'var(--t-fg)',
+                background: showAiPanel ? 'var(--t-w04)' : 'var(--t-w07)',
+                border: '1px solid var(--t-w12)', borderRadius: 3,
+                padding: '10px 14px', cursor: 'pointer', flexShrink: 0,
+              }}
+            >
+              ✨ AI fill
+            </button>
+          </div>
+
+          {showAiPanel && (
+            <div style={{ background: 'var(--t-card)', border: '1px solid var(--t-w12)', borderRadius: 6, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
+                  ✨ Describe your {activeDay.weekday}
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--t-muted)' }}>AI will generate events for the day</span>
+              </div>
+              <textarea
+                value={aiDescription}
+                onChange={e => setAiDescription(e.target.value)}
+                placeholder={`e.g. "I want to explore Velha Goa — old churches, local lunch, and a relaxed evening by the river"`}
+                rows={3}
+                style={{
+                  background: 'var(--t-bg)', border: '1px solid var(--t-w12)', borderRadius: 2,
+                  padding: '10px 12px', color: 'var(--t-fg)', fontSize: 13, outline: 'none',
+                  width: '100%', boxSizing: 'border-box', resize: 'vertical', lineHeight: 1.6,
+                }}
+              />
+              {aiError && <p style={{ margin: 0, fontSize: 12, color: '#e07070' }}>{aiError}</p>}
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => { setShowAiPanel(false); setAiError(''); }}
+                  style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--t-muted)', background: 'transparent', border: '1px solid var(--t-w10)', borderRadius: 3, padding: '8px 16px', cursor: 'pointer' }}>
+                  Cancel
+                </button>
+                <button type="button" onClick={handleAiFill} disabled={aiLoading || !aiDescription.trim()}
+                  style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: (aiLoading || !aiDescription.trim()) ? 'var(--t-muted)' : 'var(--t-bg)', background: (aiLoading || !aiDescription.trim()) ? 'var(--t-gold-20)' : 'var(--t-gold)', border: 'none', borderRadius: 3, padding: '8px 20px', cursor: (aiLoading || !aiDescription.trim()) ? 'not-allowed' : 'pointer' }}>
+                  {aiLoading ? 'Generating…' : '✨ Generate'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Event form — modal overlay */}
