@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { listTrips, createTrip, deleteTrip } from '../lib/trips';
+import { listTrips, createTrip, deleteTrip, updateTrip } from '../lib/trips';
 import type { Trip, TripType } from '../lib/trips';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
@@ -163,6 +163,10 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
   const [creating, setCreating]       = useState(false);
   const [form, setForm]               = useState(BLANK_FORM());
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [editingTrip,  setEditingTrip]  = useState<Trip | null>(null);
+  const [editForm,     setEditForm]     = useState(BLANK_FORM());
+  const [editLocQuery, setEditLocQuery] = useState('');
+  const [saving,       setSaving]       = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [editName, setEditName] = useState('');
@@ -293,6 +297,57 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
       setShowEmojiPicker(false);
       setTrips(prev => [trip, ...prev]);
     }
+  }
+
+  // ── Edit trip ────────────────────────────────────────────────────────────
+  function openEdit(trip: Trip) {
+    setEditingTrip(trip);
+    setEditLocQuery(trip.destination ?? '');
+    setEditForm({
+      name:             trip.name,
+      destination:      trip.destination ?? '',
+      date_from:        trip.date_from ?? '',
+      date_to:          trip.date_to ?? '',
+      cover_emoji:      trip.cover_emoji ?? '✈️',
+      cover_image:      trip.cover_image ?? '',
+      trip_type:        (trip.trip_type ?? '') as TripType | '',
+      people_count:     trip.people_count ?? 1,
+      geo_country:      trip.geo_country ?? '',
+      geo_country_code: trip.geo_country_code ?? '',
+      geo_state:        trip.geo_state ?? '',
+      geo_city:         trip.geo_city ?? '',
+      geo_lat:          trip.geo_lat ?? null,
+      geo_lon:          trip.geo_lon ?? null,
+    });
+  }
+
+  async function handleUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingTrip || !editForm.name.trim()) return;
+    setSaving(true);
+    await updateTrip(editingTrip.id, {
+      name:             editForm.name.trim(),
+      destination:      editForm.destination.trim(),
+      date_from:        editForm.date_from,
+      date_to:          editForm.date_to,
+      cover_emoji:      editForm.cover_emoji || '✈️',
+      cover_image:      editForm.cover_image || undefined,
+      trip_type:        (editForm.trip_type as TripType) || undefined,
+      people_count:     editForm.people_count || 1,
+      geo_country:      editForm.geo_country  || undefined,
+      geo_country_code: editForm.geo_country_code || undefined,
+      geo_state:        editForm.geo_state    || undefined,
+      geo_city:         editForm.geo_city     || undefined,
+      geo_lat:          editForm.geo_lat      ?? undefined,
+      geo_lon:          editForm.geo_lon      ?? undefined,
+    });
+    setSaving(false);
+    setTrips(prev => prev.map(t =>
+      t.id === editingTrip.id
+        ? { ...t, name: editForm.name.trim(), destination: editForm.destination, date_from: editForm.date_from, date_to: editForm.date_to, cover_emoji: editForm.cover_emoji, cover_image: editForm.cover_image || undefined, trip_type: (editForm.trip_type as TripType) || undefined, people_count: editForm.people_count, geo_country: editForm.geo_country || undefined, geo_country_code: editForm.geo_country_code || undefined, geo_state: editForm.geo_state || undefined, geo_city: editForm.geo_city || undefined, geo_lat: editForm.geo_lat ?? undefined, geo_lon: editForm.geo_lon ?? undefined }
+        : t
+    ));
+    setEditingTrip(null);
   }
 
   // ── Tree toggle helpers ──────────────────────────────────────────────────
@@ -785,7 +840,7 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                             )}
                             {/* Trip cards */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 12 }}>
-                              {cg2.trips.map(trip => <TripCard key={trip.id} trip={trip} deleteConfirm={deleteConfirm} setDeleteConfirm={setDeleteConfirm} onSelectTrip={onSelectTrip} setTrips={setTrips} />)}
+                              {cg2.trips.map(trip => <TripCard key={trip.id} trip={trip} deleteConfirm={deleteConfirm} setDeleteConfirm={setDeleteConfirm} onSelectTrip={onSelectTrip} onEdit={openEdit} setTrips={setTrips} />)}
                             </div>
                           </div>
                         ))}
@@ -805,7 +860,7 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                   </div>
                 )}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {ungrouped.map(trip => <TripCard key={trip.id} trip={trip} deleteConfirm={deleteConfirm} setDeleteConfirm={setDeleteConfirm} onSelectTrip={onSelectTrip} setTrips={setTrips} />)}
+                  {ungrouped.map(trip => <TripCard key={trip.id} trip={trip} deleteConfirm={deleteConfirm} setDeleteConfirm={setDeleteConfirm} onSelectTrip={onSelectTrip} onEdit={openEdit} setTrips={setTrips} />)}
                 </div>
               </div>
             )}
@@ -813,6 +868,134 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
         )}
       </div>
     </div>
+
+    {/* ── Edit trip modal ── */}
+    {editingTrip && (
+      <div
+        style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,.7)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto' }}
+        onClick={e => { if (e.target === e.currentTarget) setEditingTrip(null); }}
+      >
+        <div className="luxury-card" style={{ width: '100%', maxWidth: 540, padding: 'clamp(20px, 5vw, 32px)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 20, color: 'var(--t-fg)', margin: 0 }}>Edit trip</h3>
+            <button type="button" onClick={() => setEditingTrip(null)} style={{ background: 'none', border: 'none', color: 'var(--t-muted)', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>×</button>
+          </div>
+          <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Cover + name */}
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flexShrink: 0 }}>
+                <label style={inputStyle}>Cover</label>
+                <div style={{ width: 56, height: 40, borderRadius: 4, border: '1px solid var(--t-w12)', background: 'var(--t-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: 28 }}>
+                  {editForm.cover_image
+                    ? <img src={editForm.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : (editForm.cover_emoji || '✈️')}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1 }}>
+                <label style={inputStyle}>Trip name *</label>
+                <input type="text" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} required style={{ background: 'var(--t-bg)', border: '1px solid var(--t-w12)', borderRadius: 2, padding: '9px 12px', color: 'var(--t-fg)', fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }} />
+              </div>
+            </div>
+
+            {/* Destination */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, position: 'relative' }}>
+              <label style={inputStyle}>Destination</label>
+              <input
+                type="text"
+                value={editLocQuery}
+                onChange={e => {
+                  setEditLocQuery(e.target.value);
+                  setEditForm(f => ({ ...f, destination: e.target.value, geo_country: '', geo_state: '', geo_city: '', geo_country_code: '', geo_lat: null, geo_lon: null }));
+                  searchLocation(e.target.value);
+                }}
+                onFocus={() => locationSuggestions.length > 0 && setShowLocationDrop(true)}
+                onBlur={() => setTimeout(() => setShowLocationDrop(false), 150)}
+                placeholder="Search city or place…"
+                style={{ background: 'var(--t-bg)', border: '1px solid var(--t-w12)', borderRadius: 2, padding: '9px 12px', color: 'var(--t-fg)', fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }}
+                autoComplete="off"
+              />
+              {editForm.geo_country && (
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span>{countryFlag(editForm.geo_country_code)}</span>
+                  {[editForm.geo_country, editForm.geo_state, editForm.geo_city].filter(Boolean).map((p, i, arr) => <span key={i}>{p}{i < arr.length - 1 ? ' ›' : ''}</span>)}
+                </div>
+              )}
+              {showLocationDrop && locationSuggestions.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, background: 'var(--t-card)', border: '1px solid var(--t-w12)', borderRadius: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.3)', marginTop: 2 }}>
+                  {locationSuggestions.map(s => {
+                    const addr = s.address ?? {};
+                    const flag = countryFlag(addr.country_code ?? '');
+                    return (
+                      <button
+                        key={s.place_id}
+                        type="button"
+                        onMouseDown={() => {
+                          const parts = s.display_name.split(',').map((p: string) => p.trim());
+                          const short = parts.slice(0, 3).join(', ');
+                          const city  = addr.city ?? addr.town ?? addr.village ?? addr.county ?? addr.suburb ?? '';
+                          const state = addr.state ?? addr.region ?? '';
+                          setEditLocQuery(short);
+                          setEditForm(f => ({ ...f, destination: short, geo_country: addr.country ?? '', geo_country_code: addr.country_code ?? '', geo_state: state, geo_city: city, geo_lat: s.lat ? parseFloat(s.lat) : null, geo_lon: s.lon ? parseFloat(s.lon) : null }));
+                          setLocationSuggestions([]); setShowLocationDrop(false);
+                        }}
+                        style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', fontSize: 13, color: 'var(--t-fg)', background: 'transparent', border: 'none', borderBottom: '1px solid var(--t-w08)', cursor: 'pointer' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--t-w04)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        {flag && <span style={{ marginRight: 6 }}>{flag}</span>}{s.display_name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Trip type + people */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 12, alignItems: 'end' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={inputStyle}>Trip type</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {TRIP_TYPES.map(tt => (
+                    <button key={tt.value} type="button"
+                      onClick={() => setEditForm(f => ({ ...f, trip_type: f.trip_type === tt.value ? '' : tt.value }))}
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, padding: '6px 12px', borderRadius: 3, cursor: 'pointer', letterSpacing: '0.06em', color: editForm.trip_type === tt.value ? 'var(--t-gold)' : 'var(--t-muted)', background: editForm.trip_type === tt.value ? 'var(--t-gold-08)' : 'var(--t-w04)', border: editForm.trip_type === tt.value ? '1px solid var(--t-gold-30)' : '1px solid var(--t-w10)' }}
+                    >{tt.icon} {tt.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={inputStyle}>People</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button type="button" onClick={() => setEditForm(f => ({ ...f, people_count: Math.max(1, (f.people_count ?? 1) - 1) }))} style={{ width: 32, height: 38, fontSize: 18, border: '1px solid var(--t-w12)', borderRadius: 3, background: 'var(--t-bg)', color: 'var(--t-fg)', cursor: 'pointer' }}>−</button>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: 'var(--t-fg)', minWidth: 28, textAlign: 'center' }}>{editForm.people_count}</span>
+                  <button type="button" onClick={() => setEditForm(f => ({ ...f, people_count: (f.people_count ?? 1) + 1 }))} style={{ width: 32, height: 38, fontSize: 18, border: '1px solid var(--t-w12)', borderRadius: 3, background: 'var(--t-bg)', color: 'var(--t-fg)', cursor: 'pointer' }}>+</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px]">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={inputStyle}>From</label>
+                <input type="date" value={editForm.date_from} onChange={e => setEditForm(f => ({ ...f, date_from: e.target.value }))} style={{ background: 'var(--t-bg)', border: '1px solid var(--t-w12)', borderRadius: 2, padding: '9px 12px', color: 'var(--t-fg)', fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const, colorScheme: 'dark' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={inputStyle}>To</label>
+                <input type="date" value={editForm.date_to} min={editForm.date_from} onChange={e => setEditForm(f => ({ ...f, date_to: e.target.value }))} style={{ background: 'var(--t-bg)', border: '1px solid var(--t-w12)', borderRadius: 2, padding: '9px 12px', color: 'var(--t-fg)', fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const, colorScheme: 'dark' }} />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
+              <button type="button" onClick={() => setEditingTrip(null)} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--t-muted)', background: 'transparent', border: '1px solid var(--t-w10)', borderRadius: 3, padding: '9px 18px', cursor: 'pointer' }}>Cancel</button>
+              <button type="submit" disabled={saving || !editForm.name.trim()} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: saving ? 'var(--t-muted)' : 'var(--t-bg)', background: saving ? 'var(--t-gold-20)' : 'var(--t-gold)', border: 'none', borderRadius: 3, padding: '9px 22px', cursor: saving ? 'not-allowed' : 'pointer' }}>
+                {saving ? 'Saving…' : 'Save changes'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
 
     {/* ── My Account modal ── */}
     {showAccountModal && (
@@ -872,12 +1055,13 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
 
 // ── Trip card (extracted to avoid re-declaring inline) ───────────────────────
 function TripCard({
-  trip, deleteConfirm, setDeleteConfirm, onSelectTrip, setTrips,
+  trip, deleteConfirm, setDeleteConfirm, onSelectTrip, onEdit, setTrips,
 }: {
   trip: Trip;
   deleteConfirm: string | null;
   setDeleteConfirm: (id: string | null) => void;
   onSelectTrip: (t: Trip) => void;
+  onEdit: (t: Trip) => void;
   setTrips: React.Dispatch<React.SetStateAction<Trip[]>>;
 }) {
   const TRIP_TYPE_ICONS: Record<string, string> = { solo:'🧍', couple:'👫', friends:'👯', family:'👨‍👩‍👧', work:'💼' };
@@ -919,6 +1103,7 @@ function TripCard({
         ) : (
           <>
             <button type="button" onClick={() => onSelectTrip(trip)} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--t-gold)', background: 'var(--t-gold-10)', border: '1px solid var(--t-gold-30)', borderRadius: 3, padding: '7px 18px', cursor: 'pointer' }}>Open</button>
+            <button type="button" onClick={() => onEdit(trip)} title="Edit trip" style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--t-muted)', background: 'var(--t-w04)', border: '1px solid var(--t-w10)', borderRadius: 3, padding: '6px 12px', cursor: 'pointer', lineHeight: 1 }}>✏</button>
             <button type="button" onClick={() => setDeleteConfirm(trip.id)} aria-label={`Delete ${trip.name}`} style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: 'var(--t-muted)', background: 'var(--t-w04)', border: '1px solid var(--t-w10)', borderRadius: 3, padding: '6px 12px', cursor: 'pointer', lineHeight: 1 }}>×</button>
           </>
         )}
