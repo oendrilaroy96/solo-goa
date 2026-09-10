@@ -5,6 +5,7 @@ import DayPanel from '../components/DayPanel';
 import { loadItinerary, saveItinerary, newEventId, newDayId } from '../lib/itinerary-store';
 import { supabase } from '../lib/supabase';
 import type { Trip } from '../lib/trips';
+import { fetchTripWeather } from '../lib/weather';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS   = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -187,19 +188,43 @@ export default function ItineraryPage({ trip, onOpenDoc }: Props) {
 
   useEffect(() => {
     loadItinerary(tripId).then(async days => {
+      // ── 1. Resolve days (load or auto-generate) ──────────────────────────
+      let resolvedDays = days;
       if (days.length === 0) {
         const generated = generateDaysFromTrip(trip);
         if (generated.length > 0) {
-          await saveItinerary(tripId, generated);
-          setAllDays(generated);
+          resolvedDays = generated;
           setSelectedDay(generated[0].day);
-        } else {
-          setAllDays([]);
         }
-      } else {
-        setAllDays(days);
       }
+      setAllDays(resolvedDays);
       setLoading(false);
+
+      // ── 2. Fetch weather in background ───────────────────────────────────
+      if (
+        resolvedDays.length > 0 &&
+        trip.destination &&
+        trip.date_from &&
+        trip.date_to &&
+        resolvedDays.some(d => !d.weather)
+      ) {
+        fetchTripWeather(trip.destination, trip.date_from, trip.date_to).then(async weatherMap => {
+          if (!Object.keys(weatherMap).length) return;
+          const start = new Date(trip.date_from + 'T00:00:00');
+          const withWeather = resolvedDays.map((day, i) => {
+            if (day.weather) return day;
+            const d = new Date(start);
+            d.setDate(d.getDate() + i);
+            const iso = d.toISOString().split('T')[0];
+            const w = weatherMap[iso];
+            return w ? { ...day, weather: w } : day;
+          });
+          const changed = withWeather.some((d, i) => d.weather !== resolvedDays[i].weather);
+          if (!changed) return;
+          await saveItinerary(tripId, withWeather);
+          setAllDays(withWeather);
+        });
+      }
     });
     supabase.from('documents').select('*').eq('itinerary_id', tripId).order('label').then(({ data, error }) => {
       if (error) console.error('docs fetch:', error);
