@@ -443,14 +443,28 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
         </button>
       )}
 
-      {/* Event form */}
+      {/* Event form — modal overlay */}
       {showForm && (
         <div
-          className="luxury-card"
-          style={{ marginTop: 24, padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 60,
+            background: 'rgba(0,0,0,.65)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '16px',
+            overflowY: 'auto',
+          }}
+          onClick={cancelEvent}
         >
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            {editing ? 'Edit event' : `New event — ${activeDay?.weekday} ${activeDay?.day}`}
+        <div
+          className="luxury-card"
+          style={{ width: '100%', maxWidth: 520, padding: 24, display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90vh', overflowY: 'auto' }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              {editing ? 'Edit event' : `New event — ${activeDay?.weekday} ${activeDay?.day}`}
+            </div>
+            <button type="button" onClick={cancelEvent} style={{ background: 'none', border: 'none', color: 'var(--t-muted)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 2px' }}>×</button>
           </div>
 
           {/* Notice for system events that had embedded HTML links */}
@@ -569,6 +583,7 @@ export default function ItineraryPage({ onOpenDoc }: Props) {
             <button type="button" onClick={cancelEvent} style={BTN_CANCEL}>Cancel</button>
             <button type="button" onClick={handleSubmitEvent} style={BTN_SAVE}>{editing ? 'Save' : 'Add'}</button>
           </div>
+        </div>
         </div>
       )}
 
