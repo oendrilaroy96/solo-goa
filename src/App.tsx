@@ -327,7 +327,7 @@ export default function App() {
         className="sm:ml-[220px]"
         style={{ minHeight: '100vh', maxWidth: 860 + 220, paddingBottom: 96 }}
       >
-        <div style={{ maxWidth: 860, padding: '40px 24px 56px', paddingBottom: 96 }} className="sm:px-12 sm:py-14 sm:pb-14">
+        <div style={{ maxWidth: 860, paddingBottom: 96 }} className="px-4 pt-6 pb-24 sm:px-12 sm:py-14 sm:pb-14">
           {PAGES.map(p => (
             <div
               key={p.id}

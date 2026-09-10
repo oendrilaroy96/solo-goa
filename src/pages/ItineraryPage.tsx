@@ -383,7 +383,7 @@ export default function ItineraryPage({ tripId, onOpenDoc }: Props) {
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             New day
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: 10 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-[80px_1fr_1fr] gap-[10px]">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase' }}>Day #</label>
               <input type="text" placeholder="19" value={dayDraft.day} onChange={e => setDayDraft(d => ({ ...d, day: e.target.value }))} style={INPUT()} />
@@ -458,7 +458,7 @@ export default function ItineraryPage({ tripId, onOpenDoc }: Props) {
         >
         <div
           className="luxury-card"
-          style={{ width: '100%', maxWidth: 520, padding: 24, display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90vh', overflowY: 'auto' }}
+          style={{ width: '100%', maxWidth: 520, padding: 'clamp(14px, 4vw, 24px)', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90vh', overflowY: 'auto' }}
           onClick={e => e.stopPropagation()}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -476,7 +476,7 @@ export default function ItineraryPage({ tripId, onOpenDoc }: Props) {
           )}
 
           {/* Time + Title */}
-          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-[12px]">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label style={LBL}>Time</label>
               <input type="text" placeholder="e.g. 3:00 PM" value={draft.time} onChange={e => setDraft(d => ({ ...d, time: e.target.value }))} style={INPUT()} />
@@ -534,7 +534,7 @@ export default function ItineraryPage({ tripId, onOpenDoc }: Props) {
           </div>
 
           {/* Phone + Email */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px]">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label style={LBL}>Phone</label>
               <input type="tel" placeholder="+91 98765 43210" value={draft.phone} onChange={e => setDraft(d => ({ ...d, phone: e.target.value }))} style={INPUT()} />
@@ -565,7 +565,7 @@ export default function ItineraryPage({ tripId, onOpenDoc }: Props) {
           </div>
 
           {/* Tag/Cost + Status */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_130px] gap-[12px]">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label style={LBL}>Tag / Cost</label>
               <input type="text" placeholder="e.g. ₹500 or Free" value={draft.tag} onChange={e => setDraft(d => ({ ...d, tag: e.target.value }))} style={INPUT()} />

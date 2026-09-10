@@ -490,7 +490,7 @@ export default function DashboardPage({ onSelectTrip }: Props) {
               </div>
 
               {/* Date range */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px]">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   <label style={labelStyle}>From</label>
                   <input
