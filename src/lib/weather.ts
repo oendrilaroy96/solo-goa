@@ -61,16 +61,20 @@ async function fetchRange(
 }
 
 /**
- * Geocodes the destination then fetches daily weather for every date
- * in [startDate, endDate] (YYYY-MM-DD strings).
+ * Fetches daily weather for every date in [startDate, endDate].
+ * Pass lat/lon directly (stored on trip) to skip geocoding.
  * Returns a map of { "YYYY-MM-DD": "☀ 28–32°C" }.
  */
 export async function fetchTripWeather(
   destination: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  lat?: number,
+  lon?: number,
 ): Promise<Record<string, string>> {
-  const coords = await geocode(destination);
+  let coords: { lat: number; lon: number } | null =
+    lat != null && lon != null ? { lat, lon } : null;
+  if (!coords) coords = await geocode(destination);
   if (!coords) return {};
 
   const today       = new Date().toISOString().split('T')[0];

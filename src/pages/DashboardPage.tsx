@@ -126,11 +126,15 @@ const BLANK_FORM = () => ({
   geo_country_code: '',
   geo_state: '',
   geo_city: '',
+  geo_lat: null as number | null,
+  geo_lon: null as number | null,
 });
 
 interface LocationSuggestion {
   display_name: string;
   place_id: number;
+  lat?: string;
+  lon?: string;
   address?: {
     city?: string;
     town?: string;
@@ -237,6 +241,8 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
       geo_country_code:  addr.country_code ?? '',
       geo_state:         state,
       geo_city:          city,
+      geo_lat:           s.lat ? parseFloat(s.lat) : null,
+      geo_lon:           s.lon ? parseFloat(s.lon) : null,
     }));
     setLocationSuggestions([]);
     setShowLocationDrop(false);
@@ -276,6 +282,8 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
       geo_country_code: form.geo_country_code || undefined,
       geo_state:        form.geo_state    || undefined,
       geo_city:         form.geo_city     || undefined,
+      geo_lat:          form.geo_lat      ?? undefined,
+      geo_lon:          form.geo_lon      ?? undefined,
     });
     setCreating(false);
     if (trip) {

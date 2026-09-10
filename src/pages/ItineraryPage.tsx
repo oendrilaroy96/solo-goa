@@ -208,7 +208,7 @@ export default function ItineraryPage({ trip, onOpenDoc }: Props) {
         trip.date_to &&
         resolvedDays.some(d => !d.weather)
       ) {
-        fetchTripWeather(trip.destination, trip.date_from, trip.date_to).then(async weatherMap => {
+        fetchTripWeather(trip.destination, trip.date_from, trip.date_to, trip.geo_lat, trip.geo_lon).then(async weatherMap => {
           if (!Object.keys(weatherMap).length) return;
           const start = new Date(trip.date_from + 'T00:00:00');
           const withWeather = resolvedDays.map((day, i) => {

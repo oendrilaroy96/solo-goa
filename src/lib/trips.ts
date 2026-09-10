@@ -16,6 +16,8 @@ export interface Trip {
   geo_country_code?: string;
   geo_state?: string;
   geo_city?: string;
+  geo_lat?: number;
+  geo_lon?: number;
   created_at: string;
 }
 

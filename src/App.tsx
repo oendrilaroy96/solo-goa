@@ -329,7 +329,7 @@ export default function App() {
               lineHeight: 1.6,
             }}
           >
-            Working estimates, not confirmed bookings — reconfirm hours, cabs &amp; prices close to the date.
+            TripTinker — your trip plans, all in one place.
           </footer>
         </div>
       </main>
