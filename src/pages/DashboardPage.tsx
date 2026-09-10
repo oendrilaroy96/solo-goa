@@ -217,12 +217,15 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                   fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--t-gold)',
                   textTransform: 'uppercase',
                 }}>
-                  {user.email?.[0] ?? '?'}
+                  {(user.user_metadata?.full_name?.[0] ?? user.email?.[0] ?? '?')}
                 </div>
-                <div className="hidden sm:block" style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t-fg)', fontWeight: 600, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                <div className="hidden sm:block">
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--t-fg)', fontWeight: 600 }}>
+                    {user.user_metadata?.full_name}
+                  </div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user.email}
-                  </span>
+                  </div>
                 </div>
               </div>
               {/* Sign out */}

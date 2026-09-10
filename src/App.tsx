@@ -25,6 +25,7 @@ import PackingPage from './pages/PackingPage';
 import ChecklistPage from './pages/ChecklistPage';
 import DocsPage from './pages/DocsPage';
 import AuthPage from './pages/AuthPage';
+import SetNamePage from './pages/SetNamePage';
 import DashboardPage from './pages/DashboardPage';
 import type { Trip } from './lib/trips';
 
@@ -119,6 +120,11 @@ export default function App() {
   // Not logged in
   if (!session) {
     return <AuthPage />;
+  }
+
+  // Logged in but no name set yet — ask for name
+  if (!session.user.user_metadata?.full_name) {
+    return <SetNamePage user={session.user} />;
   }
 
   // Logged in but no trip selected
