@@ -99,7 +99,7 @@ function findConflict(events: EventItem[], newTime: string, excludeId?: string):
 // ─── types ────────────────────────────────────────────────────────────────────
 
 type EventDraft = {
-  time: string; title: string; description: string;
+  time: string; timeEnd: string; title: string; description: string;
   tag: string; tagVariant: TagVariant;
   categories: EventCategory[];
   phone: string; email: string; mapUrl: string; docLabel: string;
@@ -111,7 +111,7 @@ type EventDraft = {
 type DayDraft = { isoDate: string; subtitle: string; weather: string };
 
 const BLANK_EVENT = (): EventDraft => ({
-  time: '', title: '', description: '', tag: '', tagVariant: 'default',
+  time: '', timeEnd: '', title: '', description: '', tag: '', tagVariant: 'default',
   categories: [], phone: '', email: '', mapUrl: '', docLabel: '',
   transportMode: '', ticketBooked: null, estimatedPrice: '', boardingPassDocLabel: '',
 });
@@ -193,6 +193,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
   // event form
   const [showForm, setShowForm]   = useState(false);
   const [editing, setEditing]     = useState<EventItem | null>(null);
+  const editingRef                = useRef<EventItem | null>(null); // ref mirror so async commitEvent always reads current value
   const [draft, setDraft]         = useState<EventDraft>(BLANK_EVENT());
   const [conflict, setConflict]   = useState<EventItem | null>(null);
 
@@ -334,16 +335,19 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
   // ── event CRUD ────────────────────────────────────────────────────────────
 
   function openAdd() {
-    setEditing(null);
+    setEditing(null); editingRef.current = null;
     setDraft(BLANK_EVENT());
     setShowForm(true);
   }
 
   function openEdit(ev: EventItem) {
-    setEditing(ev);
+    setEditing(ev); editingRef.current = ev;
     const hasHtml = ev.description.includes('<');
+    // Split stored time range "9:00 AM–2:00 PM" into start and end parts
+    const timeParts = ev.time.split(/[–-]/).map(s => s.trim());
     setDraft({
-      time: ev.time, title: ev.title,
+      time: timeParts[0] ?? ev.time, timeEnd: timeParts[1] ?? '',
+      title: ev.title,
       description: hasHtml ? stripHtml(ev.description) : ev.description,
       tag: ev.tag, tagVariant: ev.tagVariant,
       categories: ev.categories ?? [],
@@ -415,7 +419,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
 
   function cancelEvent() {
     setShowForm(false);
-    setEditing(null);
+    setEditing(null); editingRef.current = null;
     setDraft(BLANK_EVENT());
     setShowDocUpload(false);
     setDocUploadTarget('general');
@@ -424,6 +428,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
   }
 
   async function commitEvent() {
+    const currentEditing = editingRef.current; // read from ref — immune to stale closure
     if (!draft.title.trim() || !activeDay) return;
     const isTransport = draft.categories.includes('transport');
     // Auto-fill tag from estimatedPrice if tag is empty and ticket isn't booked
@@ -431,8 +436,11 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
       ? draft.estimatedPrice.trim() : draft.tag;
     const autoVariant: TagVariant = (isTransport && draft.ticketBooked === false && !draft.tag.trim())
       ? 'pending' : draft.tagVariant;
+    const resolvedTime = (isTransport && draft.timeEnd.trim())
+      ? `${draft.time.trim()}–${draft.timeEnd.trim()}`
+      : draft.time;
     const clean: Partial<EventItem> = {
-      time: draft.time, title: draft.title, description: draft.description,
+      time: resolvedTime, title: draft.title, description: draft.description,
       tag: autoTag, tagVariant: autoVariant,
       categories: draft.categories.length ? draft.categories : undefined,
       phone: draft.phone.trim() || undefined,
@@ -448,11 +456,11 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
     };
     const next = allDays.map(d => {
       if (d.day !== activeDay.day) return d;
-      if (editing) {
+      if (currentEditing) {
         return {
           ...d,
           events: d.events.map(e =>
-            (e.id && e.id === editing.id) || (!e.id && e.time === editing.time && e.title === editing.title)
+            (e.id && e.id === currentEditing.id) || (!e.id && e.time === currentEditing.time && e.title === currentEditing.title)
               ? { ...e, ...clean }
               : e
           ),
@@ -480,7 +488,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
 
   function handleConflictEditExisting(ev: EventItem) {
     setConflict(null);
-    openEdit(ev);
+    openEdit(ev); // also syncs editingRef inside openEdit
   }
 
   async function handleDeleteEvent(evId: string) {
@@ -773,16 +781,35 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
           )}
 
           {/* Time + Title */}
-          <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-[12px]">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={LBL}>Time</label>
-              <input type="text" placeholder="e.g. 3:00 PM" value={draft.time} onChange={e => setDraft(d => ({ ...d, time: e.target.value }))} style={INPUT()} />
+          {draft.categories.includes('transport') ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={LBL}>Title *</label>
+                <input type="text" placeholder="What's happening?" value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} style={INPUT()} />
+              </div>
+              <div className="grid grid-cols-2 gap-[12px]">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={LBL}>Departure time</label>
+                  <input type="text" placeholder="e.g. 11:50 AM" value={draft.time} onChange={e => setDraft(d => ({ ...d, time: e.target.value }))} style={INPUT()} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <label style={LBL}>Arrival time</label>
+                  <input type="text" placeholder="e.g. 2:35 PM" value={draft.timeEnd} onChange={e => setDraft(d => ({ ...d, timeEnd: e.target.value }))} style={INPUT()} />
+                </div>
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={LBL}>Title *</label>
-              <input type="text" placeholder="What's happening?" value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} style={INPUT()} />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-[12px]">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={LBL}>Time</label>
+                <input type="text" placeholder="e.g. 3:00 PM" value={draft.time} onChange={e => setDraft(d => ({ ...d, time: e.target.value }))} style={INPUT()} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={LBL}>Title *</label>
+                <input type="text" placeholder="What's happening?" value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} style={INPUT()} />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Category chips */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
