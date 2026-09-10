@@ -1,5 +1,7 @@
 import { supabase } from './supabase';
 
+export type TripType = 'solo' | 'friends' | 'family' | 'couple' | 'work';
+
 export interface Trip {
   id: string;
   name: string;
@@ -7,6 +9,9 @@ export interface Trip {
   date_from: string;
   date_to: string;
   cover_emoji: string;
+  cover_image?: string;
+  trip_type?: TripType;
+  people_count?: number;
   created_at: string;
 }
 
