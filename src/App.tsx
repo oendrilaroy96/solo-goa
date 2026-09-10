@@ -15,7 +15,6 @@ function useTheme() {
 
 import { supabase } from './lib/supabase';
 import { signOut } from './lib/auth';
-import { budgetGroups, STORAGE_KEY } from './data/budget';
 import ItineraryPage from './pages/ItineraryPage';
 import BudgetPage from './pages/BudgetPage';
 import StaysPage from './pages/StaysPage';
@@ -46,15 +45,6 @@ function getStoredPage(): PageId {
   try { return (localStorage.getItem('goaSelectedPage') as PageId) || 'itinerary'; } catch { return 'itinerary'; }
 }
 
-function initTotal(): number {
-  const allItems = budgetGroups.flatMap(g => g.items);
-  try {
-    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if (Array.isArray(raw) && raw.length === allItems.length)
-      return raw.reduce((s: number, v: unknown) => s + (Number(v) || 0), 0);
-  } catch { /* */ }
-  return allItems.reduce((s, i) => s + i.defaultValue, 0);
-}
 
 const fmt = (v: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
@@ -63,7 +53,7 @@ export default function App() {
   const [session, setSession]     = useState<Session | null | undefined>(undefined); // undefined = loading
   const [trip, setTrip]           = useState<Trip | null>(null);
   const [page, setPage]           = useState<PageId>(getStoredPage);
-  const [total, setTotal]         = useState<number>(initTotal);
+  const [total, setTotal]         = useState<number>(0);
   const [autoOpenDoc, setAutoOpenDoc] = useState<string | null>(null);
   const { theme, toggle } = useTheme();
   const handleTotalChange = useCallback((t: number) => setTotal(t), []);
@@ -165,7 +155,11 @@ export default function App() {
         <div style={{ padding: '28px 20px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 20, lineHeight: 1 }}>{trip.cover_emoji || '✈'}</span>
+              <div style={{ width: 28, height: 28, borderRadius: 4, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--t-gold-08)', flexShrink: 0, fontSize: 18 }}>
+                {trip.cover_image
+                  ? <img src={trip.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : (trip.cover_emoji || '✈')}
+              </div>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--t-gold)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
                 {trip.name}
               </span>

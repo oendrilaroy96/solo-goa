@@ -429,17 +429,24 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                 padding: '8px 16px', cursor: 'pointer', flexShrink: 0,
               }}
             >
-              {showForm ? 'Cancel' : '+ New trip'}
+              + New trip
             </button>
           </div>
         </div>
 
-        {/* ── New trip form ─────────────────────────────────────────────── */}
+        {/* ── New trip form — overlay modal ─────────────────────────── */}
         {showForm && (
-          <div className="luxury-card" style={{ padding: 'clamp(14px, 4vw, 24px)', marginBottom: 32 }}>
-            <h3 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 18, color: 'var(--t-fg)', margin: '0 0 20px' }}>
-              New trip
-            </h3>
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,.7)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto' }}
+            onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setForm(BLANK_FORM()); setLocationQuery(''); setShowEmojiPicker(false); } }}
+          >
+          <div className="luxury-card" style={{ width: '100%', maxWidth: 540, padding: 'clamp(20px, 5vw, 32px)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 20, color: 'var(--t-fg)', margin: 0 }}>
+                New trip
+              </h3>
+              <button type="button" onClick={() => { setShowForm(false); setForm(BLANK_FORM()); setLocationQuery(''); setShowEmojiPicker(false); }} style={{ background: 'none', border: 'none', color: 'var(--t-muted)', fontSize: 22, cursor: 'pointer', lineHeight: 1, padding: '0 2px' }}>×</button>
+            </div>
             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
               {/* Cover + Trip name row */}
@@ -680,6 +687,7 @@ export default function DashboardPage({ user, onSelectTrip, onSignOut, theme, on
                 </button>
               </div>
             </form>
+          </div>
           </div>
         )}
 
