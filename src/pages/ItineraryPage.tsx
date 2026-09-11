@@ -498,10 +498,6 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
     await commitEvent(filtered);
   }
 
-  function handleConflictEditExisting(ev: EventItem) {
-    setConflict(null);
-    openEdit(ev); // also syncs editingRef inside openEdit
-  }
 
   async function handleDeleteEvent(evId: string) {
     if (!activeDay) return;
