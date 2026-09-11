@@ -72,6 +72,28 @@ function ContactLinks({ event, small }: { event: EventData; small?: boolean }) {
   );
 }
 
+function CabDetails({ event }: { event: EventData }) {
+  const rows = [
+    event.driverName  && { label: 'Driver',  value: event.driverName },
+    event.cabNumber   && { label: 'Cab no',  value: event.cabNumber },
+    event.driverPhone && { label: 'Phone',   value: event.driverPhone },
+  ].filter(Boolean) as { label: string; value: string }[];
+  if (!rows.length) return null;
+  return (
+    <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      {rows.map(r => (
+        <div key={r.label} style={{ background: 'var(--t-w04)', border: '1px solid var(--t-w10)', borderRadius: 3, padding: '5px 10px', display: 'flex', gap: 6, alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{r.label}</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--t-fg)', fontWeight: 600 }}>{r.value}</span>
+          {r.label === 'Phone' && (
+            <a href={`tel:${r.value}`} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-gold)', textDecoration: 'none', marginLeft: 2 }}>📞</a>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── main component ───────────────────────────────────────────────────────────
 
 const DOC_BTN_STYLE: React.CSSProperties = {
@@ -89,12 +111,30 @@ const DOC_BTN_STYLE: React.CSSProperties = {
   gap: 4,
 };
 
+function downloadCabCard(event: EventData) {
+  const lines = [
+    `🚕 Cab Details — ${event.title}`,
+    `Time: ${event.time}`,
+    event.driverName  ? `Driver: ${event.driverName}`  : '',
+    event.cabNumber   ? `Cab No: ${event.cabNumber}`   : '',
+    event.driverPhone ? `Phone:  ${event.driverPhone}` : '',
+  ].filter(Boolean).join('\n');
+  const blob = new Blob([lines], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cab-${event.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function EventItem({ event, hideIfSettled, onOpenDoc, onOpenBoardingPass, onEdit, onDelete }: Props) {
   const isSettled = event.tagVariant !== 'pending';
   if (hideIfSettled && isSettled) return null;
 
   const hasHtml = (event.description ?? '').includes('<');
   const isTransport = event.categories?.includes('transport');
+  const hasCabDetails = isTransport && (event.driverName || event.cabNumber || event.driverPhone);
 
   const docBtns = (
     <>
@@ -139,10 +179,16 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onOpenBoard
             <p className="text-[13px] m-0 mt-1 leading-snug" style={{ color: 'var(--t-muted)' }}>{event.description}</p>
           )}
           <ContactLinks event={event} />
+          {hasCabDetails && <CabDetails event={event} />}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Tag label={event.tag} variant={event.tagVariant} />
           {docBtns}
+          {hasCabDetails && (
+            <button type="button" onClick={() => downloadCabCard(event)} title="Download cab details" style={DOC_BTN_STYLE}>
+              ⬇ Cab card
+            </button>
+          )}
           {onEdit && (
             <button type="button" onClick={onEdit} title="Edit" style={{ background: 'none', border: 'none', color: 'var(--t-muted)', cursor: 'pointer', fontSize: 13, padding: '2px 4px', lineHeight: 1 }}>✏</button>
           )}
@@ -172,9 +218,15 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onOpenBoard
           <p className="text-[12px] m-0 mt-1 leading-snug" style={{ color: 'var(--t-muted)' }}>{event.description}</p>
         )}
         <ContactLinks event={event} small />
-        <div className="mt-1.5 flex items-center gap-2">
+        {hasCabDetails && <CabDetails event={event} />}
+        <div className="mt-1.5 flex items-center flex-wrap gap-2">
           <Tag label={event.tag} variant={event.tagVariant} />
           {docBtns}
+          {hasCabDetails && (
+            <button type="button" onClick={() => downloadCabCard(event)} title="Download cab details" style={DOC_BTN_STYLE}>
+              ⬇ Cab card
+            </button>
+          )}
         </div>
       </div>
     </article>

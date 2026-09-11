@@ -71,6 +71,9 @@ export interface EventItem {
   ticketBooked?: boolean;
   estimatedPrice?: string;
   boardingPassDocLabel?: string;
+  driverName?: string;
+  cabNumber?: string;
+  driverPhone?: string;
 }
 
 export interface DayData {

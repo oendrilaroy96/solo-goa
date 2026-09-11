@@ -107,6 +107,9 @@ type EventDraft = {
   ticketBooked: boolean | null;
   estimatedPrice: string;
   boardingPassDocLabel: string;
+  driverName: string;
+  cabNumber: string;
+  driverPhone: string;
 };
 type DayDraft = { isoDate: string; subtitle: string; weather: string };
 
@@ -114,6 +117,7 @@ const BLANK_EVENT = (): EventDraft => ({
   time: '', timeEnd: '', title: '', description: '', tag: '', tagVariant: 'default',
   categories: [], phone: '', email: '', mapUrl: '', docLabel: '',
   transportMode: '', ticketBooked: null, estimatedPrice: '', boardingPassDocLabel: '',
+  driverName: '', cabNumber: '', driverPhone: '',
 });
 const BLANK_DAY = (): DayDraft => ({ isoDate: '', subtitle: '', weather: '' });
 
@@ -355,6 +359,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
       mapUrl: ev.mapUrl ?? '', docLabel: ev.docLabel ?? '',
       transportMode: ev.transportMode ?? '', ticketBooked: ev.ticketBooked ?? null,
       estimatedPrice: ev.estimatedPrice ?? '', boardingPassDocLabel: ev.boardingPassDocLabel ?? '',
+      driverName: ev.driverName ?? '', cabNumber: ev.cabNumber ?? '', driverPhone: ev.driverPhone ?? '',
     });
     setShowForm(true);
   }
@@ -453,6 +458,12 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
         ? draft.estimatedPrice.trim() : undefined,
       boardingPassDocLabel: (isTransport && draft.transportMode === 'flight' && draft.boardingPassDocLabel.trim())
         ? draft.boardingPassDocLabel.trim() : undefined,
+      driverName: (isTransport && ['cab', 'auto'].includes(draft.transportMode) && draft.driverName.trim())
+        ? draft.driverName.trim() : undefined,
+      cabNumber: (isTransport && ['cab', 'auto'].includes(draft.transportMode) && draft.cabNumber.trim())
+        ? draft.cabNumber.trim() : undefined,
+      driverPhone: (isTransport && ['cab', 'auto'].includes(draft.transportMode) && draft.driverPhone.trim())
+        ? draft.driverPhone.trim() : undefined,
     };
     const source = baseDays ?? allDays;
     const next = source.map(d => {
@@ -889,6 +900,27 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
                   })}
                 </div>
               </div>
+
+              {/* Cab / Auto driver details */}
+              {['cab', 'auto'].includes(draft.transportMode) && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--t-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Driver details</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-[10px]">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={LBL}>Driver name</label>
+                      <input type="text" placeholder="e.g. Ramesh" value={draft.driverName} onChange={e => setDraft(d => ({ ...d, driverName: e.target.value }))} style={INPUT()} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={LBL}>Cab number</label>
+                      <input type="text" placeholder="e.g. GA 01 AB 1234" value={draft.cabNumber} onChange={e => setDraft(d => ({ ...d, cabNumber: e.target.value }))} style={INPUT()} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={LBL}>Driver phone</label>
+                      <input type="tel" placeholder="+91 98765 43210" value={draft.driverPhone} onChange={e => setDraft(d => ({ ...d, driverPhone: e.target.value }))} style={INPUT()} />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Estimated price if not booked */}
               {draft.ticketBooked === false && (
