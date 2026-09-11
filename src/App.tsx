@@ -358,7 +358,12 @@ export default function App() {
         style={{ minHeight: '100vh', maxWidth: 860 + 220, paddingBottom: 96 }}
       >
         <div style={{ maxWidth: 860, paddingBottom: 96 }} className="px-4 pt-6 pb-24 sm:px-12 sm:py-14 sm:pb-14">
-          {PAGES.map(p => (
+          {/* Budget always mounted so sidebar totals load on startup */}
+          <div hidden={page !== 'budget'} id="panel-budget" role="tabpanel" aria-labelledby="tab-budget">
+            <BudgetPage tripId={trip.id} onTotalsChange={handleTotalsChange} />
+          </div>
+
+          {PAGES.filter(p => p.id !== 'budget').map(p => (
             <div
               key={p.id}
               id={`panel-${p.id}`}
@@ -370,7 +375,6 @@ export default function App() {
                 <>
                   {p.id === 'itinerary'          && <ItineraryPage trip={trip} onOpenDoc={openDoc} onTripChange={setTrip} />}
                   {p.id === 'stays'              && <StaysPage />}
-                  {p.id === 'budget'             && <BudgetPage tripId={trip.id} onTotalsChange={handleTotalsChange} />}
                   {p.id === 'food-reference'     && <FoodPage />}
                   {p.id === 'shopping-reference' && <ShoppingPage />}
                   {p.id === 'packing'            && <PackingPage tripId={trip.id} />}
