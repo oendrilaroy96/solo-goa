@@ -1,7 +1,7 @@
 {
-  "name": "Solo Goa 2026",
-  "short_name": "Solo Goa",
-  "description": "Oendrila's Goa trip itinerary — 12–18 Sep 2026",
+  "name": "TripTinker",
+  "short_name": "TripTinker",
+  "description": "Your trip plans, all in one place.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0d0d0d",
