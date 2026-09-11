@@ -67,7 +67,7 @@ function parseTimeRange(t: string): { start: number; end: number } | null {
     if (start !== null && end !== null) return { start, end: end <= start ? start + 30 : end };
   }
 
-  // Single time like "4:00 PM"
+  // Single time like "4:00 PM" — use 1-min window so only exact-same-time is flagged
   const m = clean.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
   if (m) {
     let h = parseInt(m[1]);
@@ -75,7 +75,7 @@ function parseTimeRange(t: string): { start: number; end: number } | null {
     if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
     if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
     const s = h * 60 + min;
-    return { start: s, end: s + 30 };
+    return { start: s, end: s + 1 };
   }
 
   return null;
