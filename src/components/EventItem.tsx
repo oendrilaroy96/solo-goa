@@ -93,7 +93,7 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onOpenBoard
   const isSettled = event.tagVariant !== 'pending';
   if (hideIfSettled && isSettled) return null;
 
-  const hasHtml = event.description.includes('<');
+  const hasHtml = (event.description ?? '').includes('<');
   const isTransport = event.categories?.includes('transport');
 
   const docBtns = (

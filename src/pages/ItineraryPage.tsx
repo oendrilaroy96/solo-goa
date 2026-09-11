@@ -342,7 +342,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
 
   function openEdit(ev: EventItem) {
     setEditing(ev); editingRef.current = ev;
-    const hasHtml = ev.description.includes('<');
+    const hasHtml = (ev.description ?? '').includes('<');
     // Split stored time range "9:00 AM–2:00 PM" into start and end parts
     const timeParts = ev.time.split(/[–-]/).map(s => s.trim());
     setDraft({
@@ -427,7 +427,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
     if (docFileRef.current) docFileRef.current.value = '';
   }
 
-  async function commitEvent() {
+  async function commitEvent(baseDays?: typeof allDays) {
     const currentEditing = editingRef.current; // read from ref — immune to stale closure
     if (!draft.title.trim() || !activeDay) return;
     const isTransport = draft.categories.includes('transport');
@@ -436,7 +436,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
       ? draft.estimatedPrice.trim() : draft.tag;
     const autoVariant: TagVariant = (isTransport && draft.ticketBooked === false && !draft.tag.trim())
       ? 'pending' : draft.tagVariant;
-    const resolvedTime = (isTransport && draft.timeEnd.trim())
+    const resolvedTime = draft.timeEnd.trim()
       ? `${draft.time.trim()}–${draft.timeEnd.trim()}`
       : draft.time;
     const clean: Partial<EventItem> = {
@@ -454,7 +454,8 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
       boardingPassDocLabel: (isTransport && draft.transportMode === 'flight' && draft.boardingPassDocLabel.trim())
         ? draft.boardingPassDocLabel.trim() : undefined,
     };
-    const next = allDays.map(d => {
+    const source = baseDays ?? allDays;
+    const next = source.map(d => {
       if (d.day !== activeDay.day) return d;
       if (currentEditing) {
         return {
@@ -484,6 +485,17 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
   async function handleSubmitForce() {
     setConflict(null);
     await commitEvent();
+  }
+
+  async function handleConflictReplace() {
+    if (!activeDay || !conflict) return;
+    const filtered = allDays.map(d =>
+      d.day === activeDay.day
+        ? { ...d, events: d.events.filter(e => e.id !== conflict.id) }
+        : d
+    );
+    setConflict(null);
+    await commitEvent(filtered);
   }
 
   function handleConflictEditExisting(ev: EventItem) {
@@ -774,7 +786,7 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
           </div>
 
           {/* Notice for system events that had embedded HTML links */}
-          {editing && editing.description.includes('<') && (
+          {editing && (editing.description ?? '').includes('<') && (
             <div style={{ fontSize: 11, color: 'var(--t-muted)', background: 'var(--t-w04)', border: '1px solid var(--t-w10)', borderRadius: 2, padding: '8px 10px', lineHeight: 1.5 }}>
               Links from the original description have been removed. Use the <strong style={{ color: 'var(--t-fg)' }}>Map link</strong>, <strong style={{ color: 'var(--t-fg)' }}>Phone</strong>, and <strong style={{ color: 'var(--t-fg)' }}>Email</strong> fields below instead.
             </div>
@@ -1111,24 +1123,24 @@ export default function ItineraryPage({ trip, onOpenDoc, onTripChange }: Props) 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <button
                 type="button"
-                onClick={() => setConflict(null)}
+                onClick={handleConflictReplace}
                 style={{ ...BTN_SAVE, textAlign: 'center' }}
               >
-                Change my time
-              </button>
-              <button
-                type="button"
-                onClick={() => handleConflictEditExisting(conflict)}
-                style={{ ...BTN_CANCEL, textAlign: 'center' }}
-              >
-                Edit existing event instead
+                Replace existing event
               </button>
               <button
                 type="button"
                 onClick={handleSubmitForce}
-                style={{ ...BTN_CANCEL, textAlign: 'center', color: 'var(--t-muted-60)', borderColor: 'var(--t-w06)' }}
+                style={{ ...BTN_CANCEL, textAlign: 'center' }}
               >
                 Add anyway
+              </button>
+              <button
+                type="button"
+                onClick={() => setConflict(null)}
+                style={{ ...BTN_CANCEL, textAlign: 'center', color: 'var(--t-muted-60)', borderColor: 'var(--t-w06)' }}
+              >
+                Change time
               </button>
             </div>
           </div>
