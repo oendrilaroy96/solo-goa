@@ -124,8 +124,8 @@ export default function EventItem({ event, hideIfSettled, onOpenDoc, onOpenBoard
       </div>
 
       {/* Desktop: 3-col layout */}
-      <div className="hidden sm:grid sm:grid-cols-[100px_1fr_auto] sm:gap-4 sm:items-baseline">
-        <div className="font-mono text-[11.5px] font-medium tabular-nums" style={{ color: 'var(--t-gold)' }}>{event.time}</div>
+      <div className="hidden sm:grid sm:grid-cols-[minmax(120px,160px)_1fr_auto] sm:gap-4 sm:items-baseline">
+        <div className="font-mono text-[11.5px] font-medium" style={{ color: 'var(--t-gold)', wordBreak: 'break-word' }}>{event.time}</div>
         <div>
           <h3 className="mt-0 mb-0 text-[14px] font-semibold leading-snug" style={{ color: 'var(--t-fg)' }}>{event.title}</h3>
           <CategoryChips event={event} />
