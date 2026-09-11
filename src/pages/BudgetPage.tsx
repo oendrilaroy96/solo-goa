@@ -26,11 +26,15 @@ function uid() {
 const fmt = (v: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
 
-// Parse ₹ amount from a tag string like "₹1,487" or "~₹3,500, estimate"
+// Parse amount from a tag string — handles "₹1,487", "1487", "~3,500", "Rs 500" etc.
 function parseAmount(tag: string): number {
-  const match = tag.match(/₹\s*([0-9,]+(?:\.[0-9]+)?)/);
-  if (!match) return 0;
-  return parseFloat(match[1].replace(/,/g, ''));
+  // First try with ₹ or Rs prefix
+  const withSymbol = tag.match(/(?:₹|rs\.?)\s*([0-9,]+(?:\.[0-9]+)?)/i);
+  if (withSymbol) return parseFloat(withSymbol[1].replace(/,/g, ''));
+  // Fall back to any plain number in the string
+  const plain = tag.match(/([0-9,]+(?:\.[0-9]+)?)/);
+  if (plain) return parseFloat(plain[1].replace(/,/g, ''));
+  return 0;
 }
 
 interface ItinLine {
